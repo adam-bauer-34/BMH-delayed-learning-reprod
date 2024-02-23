@@ -14,7 +14,7 @@ plt.rcParams.update(presets)
 
 # data base path
 cwd = os.getcwd()
-data_head_path = ''.join([cwd, '/../models/data/output/'])
+data_head_path = ''.join([cwd, '/data/output/'])
 
 # initial year for plotting
 ti = 2020

@@ -12,3 +12,4 @@ dependencies:
   - numpy=1.23.5
   - xarray-datatree=0.0.12
   - gurobi=10.0.1
+  - netCDF4
