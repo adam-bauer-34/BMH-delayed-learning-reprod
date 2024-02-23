@@ -24,7 +24,7 @@ N_samples = int(sys.argv[3])
 method = int(sys.argv[4])
 save_output = int(sys.argv[5])
 
-dt = 5.0
+dt = 10.0
 learning_times = np.arange(0.0, 15.0, dt)
 
 data_tree_dict = {}
@@ -63,10 +63,6 @@ data_tree = DataTree.from_dict(data_tree_dict, 'learning_time')
 dt_path = ''.join([cwd, path_to_data, cal, '_', rec_cal, '_method', str(method), '_inv_rp_data_short.nc'])
 
 if save_output:
-    np.savetxt(filename, data, delimiter=',', header='Learning-time,Risk-premium')
-
-    print("\nOutcome of risk premium calculation successfully saved to:\n", filename)
-
     data_tree.to_netcdf(filepath=dt_path, mode='w', format='NETCDF4', engine='netcdf4')
 
     print("\nData from each simulation saved to:\n", dt_path)
