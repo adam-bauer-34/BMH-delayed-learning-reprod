@@ -57,8 +57,8 @@ ax[0].hist(scc_dist_2020, orientation='horizontal', bins=15, alpha=yhist_alpha,
 ax[0].hist(B_dist, color='#E69F00', alpha=xhist_alpha, bins=20, weights=np.ones_like(B_dist)*0.22, bottom=ylo,
            label="Carbon budget distribution", zorder=10)
 
-ax[0].hlines(np.mean(scc_dist_2020), min(B_dist)*lf_0, max(B_dist)*uf_0,
-             color='#56B4E9', linestyle='dashdot', linewidth=3, label="Average carbon price")
+ax[0].scatter(np.mean(B_dist)-20, np.mean(scc_dist_2020), marker='*', s=450,
+           label="Average carbon price", color='#CC79A7', zorder=100)
 
 ax[0].legend(loc='upper left')
 
@@ -80,9 +80,8 @@ ax[1].hist(scc_dist_2030, orientation='horizontal', bins=5000, alpha=yhist_alpha
            bottom=0, 
            weights=np.ones_like(scc_dist_2020)*1.5, color='#56B4E9')
 
-ax[1].hlines(np.mean(scc_dist_2030), 0,
-                max(B_dist-t15_inv_rec['10.0']['1'].ds.cumulative_emissions[1,0].values) * uf_0,
-             color='#56B4E9', linestyle='dashdot', linewidth=3)
+ax[1].scatter(np.mean(B_dist)-380, np.mean(scc_dist_2030), marker='*', s=450,
+           label="Average carbon price", color='#CC79A7', zorder=100)
 
 ax[1].set_xticks([0,100,200,300,400,500])
 ax1_top = ax[1].twiny()
