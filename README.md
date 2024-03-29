@@ -21,7 +21,6 @@ Operationallly speaking, running both versions is identical. Each code is assign
 | Figure 11: Effect of delayed learning on the temporal distribution of spending, high-bound calibration | `11_temporal_redistribution_high_linear.sh` |
 | Figure 12: Effect of delayed learning on aggregate policy cost, nonlinear calibration | `12_effect_of_learning_pow.sh` |
 | Figure 13: Effect of delayed learning on the temporal distribution of spending, nonlinear calibration | `13_temporal_redistribution_pow.sh` |
-|----------|----------|
 
 If you're an academic, you can email Gurobi customer support to get a free academic license. It's easy to install, and once it's installed, I believe you'll be good to go to run the `with-gurobi` codes. If you're not using Gurobi, I did preliminary testing on the `without-gurobi` codes to make sure they all still work and generate the results, but your mileage may vary, as I had access to Gurobi during the course of this project via my affiliation with the University of Illinois Urbana-Champaign. My apologies for any headaches with the `without-gurobi` codes, and please do reach out to the above email if any problems to arise.
 
