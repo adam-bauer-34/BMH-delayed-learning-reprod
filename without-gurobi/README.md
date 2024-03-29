@@ -6,9 +6,15 @@ Simply run the numbered code to recreate the desired figure. You may need to exe
 ```
     chmod +x script_name
 ```
-to grant execution permissions (hence the `+x`) to the script you want to run.
+to grant execution permissions (hence the `+x`) to the script you want to run. 
 
-All figures will be deposited into the `figs` folder. To run indiviudal simulations, you can run any of the files in `simulation_mains`, and to make individual figures, you can run any file in the `figure_mains` folder. **Note** you should run all scripts from this directory (the one that contains this README file). As an example, let's say you want to run the `invBase_cvxpy_main.py` file in the `ar6_15` calibration, but not save the output. Then in your command line, you'd use:
+As an example, if you want to recreate Figure 1 which shows our calibration of the marginal abatement cost curves, you would simply run:
+```
+./01_mac_calibration.sh
+```
+Notice the first bit of the above program name, `01_mac_calibration.sh`, matches the figure number we wanted to create, Figure 1.
+
+All figures will be deposited into the `figs` folder. To run indiviudal simulations, you can run any of the files in `simulation_mains`, and to make individual figures, you can run any file in the `figure_mains` folder. **Note:** you should run all scripts from this directory (the one that contains this README file). As an example, let's say you want to run the `invBase_cvxpy_main.py` file in the `ar6_15` calibration, but not save the output. Then in your command line, you'd use:
 ```
 python simulation_mains/invBase_cvxpy_main.py ar6_15 1 0
 ```

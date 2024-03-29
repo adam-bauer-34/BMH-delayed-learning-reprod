@@ -10,6 +10,6 @@ If you're an academic, you can email Gurobi customer support to get a free acade
 
 A final note is that you should consider using the `.yml` file provided in this directory to establish a virtual python environment that should include all of the necessary dependencies for the code to run smoothly. I recommend using `conda` to do this. 
 
-To cite our working paper that uses these codes: Bauer, A. M., F. McIsaac, S. Hallegatte. *In preparation*, 2024. (Will update once we have an actual working paper number, and hopefully a volume and page number from a journal!)
+To cite our working paper that uses these codes: [Bauer, A. M., F. McIsaac, S. Hallegatte. *How Delayed Learning about Climate Uncertainty Impacts Decarbonization Investment Strategies*. World Bank Policy Research Working Paper No. WPS10743, World Bank Group, Washington DC, 2024.](https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099829103282438373/idu1f2d86d77127091490d1a6df1dc342f15d10b)
 
-Last edited: February 2024.
+Last edited: 29 March, 2024.
