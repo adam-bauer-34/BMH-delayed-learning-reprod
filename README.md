@@ -4,7 +4,24 @@ By: Adam Michael Bauer -- adammb4 [at] illinois [dot] edu
 
 This set of codes reproduces all of the figures and analysis carried out in *How delayed learning about climate uncertainty impacts decarbonization investment strategies*. There are two main folders in the head directory: `with-gurobi` and `without-gurobi`. Gurobi is a commerical nonlinear programming solver that is free for academics, but may not be free for everyone. (It is unclear to me if it's freely available for *all* researchers or just researchers *at universities*. I imagine Gurobi will handle this on a case-by-case basis, so just shoot their customer support staff an email and they can help.) Hence, I've made a version of the code that should (emphasis on *should*) work for everyone. I cannot guarantee that the output of both sets of codes will be identical owing to the various approximations a given solver would make along the way towards finding the optimal solution, but the overall story of our paper should still hold. Note that in my preliminary testing of the `without-gurobi` codes, the programs ran much slower than their `with-gurobi` counterparts. 
 
-Operationallly speaking, running both versions is identical. Each code is assigned a number corresponding to the figure it creates; the number matches the working paper figures. So code `01_xxx.py` makes Figure 1, which shows our calibration of the marginal abatement cost curves. 
+Operationallly speaking, running both versions is identical. Each code is assigned a number corresponding to the figure it creates; the number matches the working paper figures. So code `01_xxx.py` makes Figure 1, which shows our calibration of the marginal abatement cost curves, and so on. Here is the full table:
+
+| Figure Desired | Code to Run |
+|----------|----------|
+| Figure 1: Calibrating marginal abatement costs | `01_mac_calibration.sh` |
+| Figure 2: Effect of delayed learning on aggregate policy cost | `02_effect_of_learning_low_linear.sh` |
+| Figure 3: Effect of delayed learning on the temporal distribution of spending | `03_temporal_redistribution_low_linear.sh` |
+| Figure 4: Effect of delayed learning on sectoral allocation of abatement investment | `04_sectoral_response.sh`|
+| Figure 5: Effect of delayed learning on the carbon price | `05_carbon_price_response.sh` |
+| Figure 6: Effect of delayed learning on aggregate policy cost including direct air capture technologies | `06_dac_effect_of_learning.sh` |
+| Figure 7: Impact of delayed learning on sectoral allocation of abatement investment when direct air capture technologies are present | `07_dac_vs_no_dac_comp.sh` |
+| Figure 8: Effect of delayed learning on aggregate policy cost, growing emissions baseline | `08_effect_of_learning_emis.sh` |
+| Figure 9: Effect of delayed learning on the temporal distribution of spending, growing emissions baseline | `09_temporal_redistribution_emis.sh` |
+| Figure 10: Effect of delayed learning on aggregate policy cost, high-bound calibration | `10_effect_of_learning_high_linear.sh` |
+| Figure 11: Effect of delayed learning on the temporal distribution of spending, high-bound calibration | `11_temporal_redistribution_high_linear.sh` |
+| Figure 12: Effect of delayed learning on aggregate policy cost, nonlinear calibration | `12_effect_of_learning_pow.sh` |
+| Figure 13: Effect of delayed learning on the temporal distribution of spending, nonlinear calibration | `13_temporal_redistribution_pow.sh` |
+|----------|----------|
 
 If you're an academic, you can email Gurobi customer support to get a free academic license. It's easy to install, and once it's installed, I believe you'll be good to go to run the `with-gurobi` codes. If you're not using Gurobi, I did preliminary testing on the `without-gurobi` codes to make sure they all still work and generate the results, but your mileage may vary, as I had access to Gurobi during the course of this project via my affiliation with the University of Illinois Urbana-Champaign. My apologies for any headaches with the `without-gurobi` codes, and please do reach out to the above email if any problems to arise.
 
