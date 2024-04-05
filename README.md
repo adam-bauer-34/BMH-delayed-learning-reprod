@@ -4,9 +4,11 @@ By: Adam Michael Bauer -- adammb4 [at] illinois [dot] edu
 
 To cite our working paper that uses these codes: [Bauer, A. M., F. McIsaac, S. Hallegatte. *How Delayed Learning about Climate Uncertainty Impacts Decarbonization Investment Strategies*. World Bank Policy Research Working Paper No. WPS10743, World Bank Group, Washington DC, 2024.](https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099829103282438373/idu1f2d86d77127091490d1a6df1dc342f15d10b)
 
-This set of codes reproduces all of the figures and analysis carried out in *How delayed learning about climate uncertainty impacts decarbonization investment strategies*. There are two main folders in the head directory: `with-gurobi` and `without-gurobi`. Gurobi is a commerical nonlinear programming solver that is free for academics, but may not be free for everyone. (It is unclear to me if it's freely available for *all* researchers or just researchers *at universities*. I imagine Gurobi will handle this on a case-by-case basis, so just shoot their customer support staff an email and they can help.) Hence, I've made a version of the code that should (emphasis on *should*) work for everyone. I cannot guarantee that the output of both sets of codes will be identical owing to the various approximations a given solver would make along the way towards finding the optimal solution, but the overall story of our paper should still hold. Note that in my preliminary testing of the `without-gurobi` codes, the programs ran much slower than their `with-gurobi` counterparts. 
+## General package overview
 
-Operationallly speaking, running both versions is identical. Each code is assigned a number corresponding to the figure it creates; the number matches the working paper figures. So code `01_xxx.py` makes Figure 1, which shows our calibration of the marginal abatement cost curves, and so on. Here is the full table for both versions:
+This set of codes reproduces all of the figures and analysis carried out in *How delayed learning about climate uncertainty impacts decarbonization investment strategies*. This package uses Gurobi, a commerical nonlinear programming solver that is free for academics, but may not be free for everyone. (It is unclear to me if it's freely available for *all* researchers or just researchers *at universities*. I imagine Gurobi will handle this on a case-by-case basis, so just shoot their customer support staff an email and they can help.)
+
+Each code is assigned a number corresponding to the figure it creates; the number matches the working paper figures. So code `01_xxx.py` makes Figure 1, which shows our calibration of the marginal abatement cost curves, and so on. Here is the full table for both versions:
 
 | Figure Desired | Code to Run |
 |----------|----------|
@@ -24,8 +26,30 @@ Operationallly speaking, running both versions is identical. Each code is assign
 | Figure 12: Effect of delayed learning on aggregate policy cost, nonlinear calibration | `12_effect_of_learning_pow.sh` |
 | Figure 13: Effect of delayed learning on the temporal distribution of spending, nonlinear calibration | `13_temporal_redistribution_pow.sh` |
 
-If you're an academic, you can email Gurobi customer support to get a free academic license. It's easy to install, and once it's installed, I believe you'll be good to go to run the `with-gurobi` codes. If you're not using Gurobi, I did preliminary testing on the `without-gurobi` codes to make sure they all still work and generate the results, but your mileage may vary, as I had access to Gurobi during the course of this project via my affiliation with the University of Illinois Urbana-Champaign. My apologies for any headaches with the `without-gurobi` codes, and please do reach out to the above email if any problems to arise.
+If you're an academic, you can email Gurobi customer support to get a free academic license. It's easy to install, and once it's installed, I believe you'll be good to go to run the codes.
 
 A final note is that you should consider using the `.yml` file provided in this directory to establish a virtual python environment that should include all of the necessary dependencies for the code to run smoothly. I recommend using `conda` to do this. 
 
-Last edited: 29 March, 2024.
+## How to run code
+
+To run the codes, simply navigate to the `codes` directory and run the numbered code to recreate the desired figure. You may need to execute:
+```
+    chmod +x script_name
+```
+to grant execution permissions (hence the `+x`) to the script you want to run.
+
+As an example, if you want to recreate Figure 1 which shows our calibration of the marginal abatement cost curves, you would simply run:
+```
+./01_mac_calibration.sh
+```
+Notice the first bit of the above program name, `01_mac_calibration.sh`, matches the figure number we wanted to create, Figure 1.
+
+All figures will be deposited into the `codes/figs` folder. To run indiviudal simulations, you can run any of the files in `simulation_mains`, and to make individual figures, you can run any file in the `figure_mains` folder. **Note** you should run all scripts from the `codes` directory. As an example, let's say you want to run the `invBase_cvxpy_main.py` file in the `ar6_15` calibration, but not save the output. Then in your command line, you'd use:
+```
+python simulation_mains/invBase_cvxpy_main.py ar6_15 1 0
+```
+
+**Note:** You should be operating in the Python environment provided at the head directory. Without it, I make no guarantees any of this will run on your machine (and even then, well, mileage may vary...).
+
+Last edited: 5 April, 2024.
+
