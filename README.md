@@ -30,9 +30,9 @@ If you're an academic, you can email Gurobi customer support to get a free acade
 
 A final note is that you should consider using the `.yml` file provided in this directory to establish a virtual python environment that should include all of the necessary dependencies for the code to run smoothly. I recommend using `conda` to do this. 
 
-## How to run code
+## How to run the code
 
-To run the codes, simply navigate to the `codes` directory and run the numbered code to recreate the desired figure. You may need to execute:
+To run the codes, simply navigate to the `codes` directory and run the numbered code to recreate the desired figure. If you want to run the program `script_name`, you may need to execute:
 ```
     chmod +x script_name
 ```
@@ -44,7 +44,7 @@ As an example, if you want to recreate Figure 1 which shows our calibration of t
 ```
 Notice the first bit of the above program name, `01_mac_calibration.sh`, matches the figure number we wanted to create, Figure 1.
 
-All figures will be deposited into the `codes/figs` folder. To run indiviudal simulations, you can run any of the files in `simulation_mains`, and to make individual figures, you can run any file in the `figure_mains` folder. **Note** you should run all scripts from the `codes` directory. As an example, let's say you want to run the `invBase_cvxpy_main.py` file in the `ar6_15` calibration, but not save the output. Then in your command line, you'd use:
+All figures will be deposited into the `codes/figs` folder. To run indiviudal simulations, you can run any of the files in `simulation_mains`, and to make individual figures, you can run any file in the `figure_mains` folder. **Note:** You should run all scripts from the `codes` directory. As an example, let's say you want to run the `invBase_cvxpy_main.py` file in the `ar6_15` calibration, but not save the output. Then in your command line, you'd use:
 ```
 python simulation_mains/invBase_cvxpy_main.py ar6_15 1 0
 ```
