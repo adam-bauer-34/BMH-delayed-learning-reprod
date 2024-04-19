@@ -97,8 +97,9 @@ class MACBaseModel():
         generate the vector of cumulative emissions for t>0
     """
 
-    def __init__(self, cal):
+    def __init__(self, cal, scale=1e3):
         self.cal = cal # calibration name
+        self.scale = scale # scaling for objective function
 
         # if the calibration name is not a string, throw an error
         if not isinstance(self.cal, str):
@@ -154,7 +155,7 @@ class MACBaseModel():
         self.abars = cp.Parameter(self.N_secs, nonneg=True, 
                                   value=df_secs.loc['abar'].values) # emissions rates by sector
         self.gbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                  value=df_secs.loc['gbar'].values) # marginal abatement cost
+                                  value=df_secs.loc['gbar'].values/self.scale) # marginal abatement cost
         self.powers = df_secs.loc['power'].values # power for marginal abatement cost curves
 
     def solve_opt(self, save_output=True, verbose=True, cal_purposes=False):
@@ -209,7 +210,7 @@ class MACBaseModel():
             print("Cumulative emissions: ", self.psi_vec.value)
 
             # the SCC is the final condition value
-            print("SCC: ", self.constraints[-1].dual_value[0])
+            print("SCC: ", self.constraints[-1].dual_value[0] * self.scale)
         
     def _save_output(self):
         """Save output of optimization to netCDF file.
@@ -218,13 +219,13 @@ class MACBaseModel():
         # make xarray dataset object
         ds = xr.Dataset(data_vars={'abatement': (['sector', 'time'], self.a.value),
                         'cumulative_emissions': (['time'], self.psi_vec.value),
-                        'scc': (['time'], self.constraints[-1].dual_value),
+                        'scc': (['time'], self.constraints[-1].dual_value * self.scale),
                         'gbars': (['sector'], self.gbars.value),
                         'abars': (['sector'], self.abars.value),
                         'power': (['sector'], self.powers)},
                 coords={'time': (['time'], self.times),
                         'sector': (['sector'], self.sectors)},
-                attrs={'total_cost': self.prob.value,
+                attrs={'total_cost': self.prob.value * self.scale,
                     'r': self.r.value,
                     'beta':self.beta.value,
                     'dt': self.dt.value,

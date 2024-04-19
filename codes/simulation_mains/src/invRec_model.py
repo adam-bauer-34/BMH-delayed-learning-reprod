@@ -128,9 +128,10 @@ class INVRecourseModel():
         generate capital depreciations for abatement investment for t < T
     """
 
-    def __init__(self, cal, rec_cal):
+    def __init__(self, cal, rec_cal, scale=1e5):
         self.cal = cal # calibration name
         self.rec_cal = rec_cal # recourse calibration name
+        self.scale = scale # scaling for obj function
 
         # if the calibration name is not a string, throw an error
         if not isinstance(self.cal, str) and not isinstance(self.rec_cal, str):
@@ -204,7 +205,7 @@ class INVRecourseModel():
         # NOTE: the KeyError comes from the fact that df_secs.loc['cbar'] has no entries
         try:
             self.cbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                      value=df_secs.loc['cbar'].values/10000.)
+                                      value=df_secs.loc['cbar'].values/self.scale)
 
         except KeyError:
             # make relative costs for calibration
@@ -605,7 +606,7 @@ class INVRecourseModel():
         for per in range(self.N_periods):
             scc_proc_tmp = []
             for state in range(self.tree.N_nodes_per_period[per]):
-                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * 10000.)
+                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * self.scale)
                 tmp_const_ind += 1
             self.scc_proc[per] = scc_proc_tmp
 
@@ -619,7 +620,7 @@ class INVRecourseModel():
                         'abatement': (['state', 'sector', 'time_state'], self.a_proc[per]),
                         'cumulative_emissions': (['state', 'time_state'], self.psi_proc[per]),
                         'scc': (['state', 'time'], self.scc_proc[per]),
-                        'cbars': (['sector'], self.cbars.value * 10000.),
+                        'cbars': (['sector'], self.cbars.value * self.scale),
                         'abars': (['sector'], self.abars.value),
                         'deltas': (['sector'], self.deltas.value),
                         'a_0s': (['sector'], self.a_0s.value),
@@ -635,7 +636,7 @@ class INVRecourseModel():
         # make DataTree object with parent coordinate named 'period'
         self.data_tree = DataTree.from_dict(datatree_dict, 'period')
 
-        self.data_tree['0'].attrs = {'total_cost': self.prob.value * 10000.,
+        self.data_tree['0'].attrs = {'total_cost': self.prob.value * self.scale,
                          'r': self.r.value,
                          'beta':self.beta.value,
                          'dt': self.dt.value,

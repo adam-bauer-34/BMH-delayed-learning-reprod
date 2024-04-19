@@ -107,10 +107,11 @@ class MACRecourseModelExp():
         generate the vector of cumulative emissions for t>0
     """
 
-    def __init__(self, cal, N_samples, method):
+    def __init__(self, cal, N_samples, method, scale=5000):
         self.cal = cal # calibration name
         self.N_samples = N_samples # recourse calibration name
         self.method = method # method to evaluate the expectation operator
+        self.scale = scale # scaling for obj function
 
         # if the calibration name is not a string, throw an error
         if not isinstance(self.cal, str):
@@ -168,7 +169,7 @@ class MACRecourseModelExp():
         self.abars = cp.Parameter(self.N_secs, nonneg=True, 
                                   value=df_secs.loc['abar'].values) # emissions rates by sector
         self.gbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                  value=df_secs.loc['gbar'].values/1000.) # marginal abatement cost
+                                  value=df_secs.loc['gbar'].values/self.scale) # marginal abatement cost
         self.powers = df_secs.loc['power'].values # power for marginal abatement cost curves
 
         self.period_times = [0.0, self.T.value] # period times (only two, t0 and T)
@@ -407,7 +408,7 @@ class MACRecourseModelExp():
         for per in range(self.N_periods):
             scc_proc_tmp = []
             for state in range(self.N_samples):
-                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * 1000)
+                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * self.scale)
                 tmp_const_ind += 1
             self.scc_proc[per] = scc_proc_tmp
 
@@ -420,7 +421,7 @@ class MACRecourseModelExp():
             tmp_ds = xr.Dataset(data_vars={'abatement': (['state', 'sector', 'time'], self.a_proc[per]),
                         'cumulative_emissions': (['state', 'time_state'], self.psi_proc[per]),
                         'scc': (['state', 'time'], self.scc_proc[per]),
-                        'gbars': (['sector'], self.gbars.value * 1000),
+                        'gbars': (['sector'], self.gbars.value * self.scale),
                         'power': (['sector'], self.powers),
                         'abars': (['sector'], self.abars.value),
                         'B_dist': (['state'], self.B_dist),
@@ -434,7 +435,7 @@ class MACRecourseModelExp():
         # make DataTree object with parent coordinate named 'period'
         self.data_tree = DataTree.from_dict(datatree_dict, 'period')
 
-        self.data_tree['0'].attrs = {'total_cost': self.prob.value * 1000,
+        self.data_tree['0'].attrs = {'total_cost': self.prob.value * self.scale,
                     'r': self.r.value,
                     'beta':self.beta.value,
                     'dt': self.dt.value,
