@@ -18,6 +18,10 @@ from src.invRec_model import INVRecourseModel
 from src.invRecExp_model import INVRecourseModelExp
 from datatree import DataTree
 
+# get rid of stupid future warnings stuff, can delete in the future if necessary (lol)
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 cal = sys.argv[1]
 rec_cal = sys.argv[2]
 N_samples = int(sys.argv[3])
@@ -27,8 +31,19 @@ save_output = int(sys.argv[5])
 dt = 5.0
 learning_times = np.arange(0.0, 80.0, dt)
 
+if cal=='ar6pow_15':
+    scale = np.ones_like(learning_times) * 1e5
+    scale[2] = 5e3
+    scale[learning_times>=40.0] = 1e5
+
 data_tree_dict = {}
+i = 0
 for Tstar in learning_times:
+
+    print("------------------------------")
+    print("WE ARE ON T*={}.".format(Tstar))
+    print("------------------------------")
+
     # reset seed so every time we initiate the tree we get the same RCB distribution
     np.random.seed(9324)
 
@@ -38,13 +53,17 @@ for Tstar in learning_times:
         tmp_m = INVRecourseModelExp(cal, N_samples, method)
     
     else:
-        tmp_m = INVRecourseModel(cal, rec_cal)
+        if cal=='ar6pow_15':
+            tmp_m = INVRecourseModel(cal, rec_cal, scale=scale[i])
+        else:
+            tmp_m = INVRecourseModel(cal, rec_cal)
 
         # initialize tree structure
         tmp_m.tree_init(print_outcome=True)
 
         tmp_m.rev_times = [Tstar]
         tmp_m.period_times = [0.0, Tstar, tmp_m.T.value]
+        i += 1
 
     # initialize problem variables and expressions
     tmp_m.prob_init(print_outcome=False)

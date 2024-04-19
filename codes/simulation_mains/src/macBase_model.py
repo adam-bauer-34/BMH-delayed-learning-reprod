@@ -97,7 +97,7 @@ class MACBaseModel():
         generate the vector of cumulative emissions for t>0
     """
 
-    def __init__(self, cal, scale=1e3):
+    def __init__(self, cal, scale=1e4):
         self.cal = cal # calibration name
         self.scale = scale # scaling for objective function
 

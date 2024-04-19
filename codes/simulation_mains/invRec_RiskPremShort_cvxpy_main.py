@@ -18,6 +18,10 @@ from src.invRec_model import INVRecourseModel
 from src.invRecExp_model import INVRecourseModelExp
 from datatree import DataTree
 
+# get rid of stupid future warnings stuff, can delete in the future if necessary (lol)
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 cal = sys.argv[1]
 rec_cal = sys.argv[2]
 N_samples = int(sys.argv[3])

@@ -14,6 +14,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+# get rid of stupid future warnings stuff, can delete in the future if necessary (lol)
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 from src.macRecEmis_model import MACRecourseModelEmis
 from src.macRecExpEmis_model import MACRecourseModelExpEmis
 from datatree import DataTree
