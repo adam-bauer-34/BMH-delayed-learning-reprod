@@ -39,7 +39,6 @@ if cal=='ar6pow_15':
 data_tree_dict = {}
 i = 0
 for Tstar in learning_times:
-
     print("------------------------------")
     print("WE ARE ON T*={}.".format(Tstar))
     print("------------------------------")
