@@ -28,13 +28,12 @@ N_samples = int(sys.argv[3])
 method = int(sys.argv[4])
 save_output = int(sys.argv[5])
 
-dt = 10.0
-learning_times = np.arange(0.0, 15.0, dt)
+learning_times = [0.0, 10.0]
 
 data_tree_dict = {}
 for Tstar in learning_times:
     # reset seed so every time we initiate the tree we get the same RCB distribution
-    np.random.seed(9324)
+    np.random.seed(2854)
 
     # temporary model class
     # if Tstar = 0, run the expectation version, if Tstar > 0, run the proper recourse model

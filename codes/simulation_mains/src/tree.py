@@ -88,6 +88,13 @@ class TreePathDep():
         """
         if self.method == "MC":
             self._initialize_tree_data_MC(check_generated_data)
+        
+        elif self.method == "MC_TRUNC":
+            if trunc_percentile == None:
+                raise ValueError("No truncation percentile passed. Please add to initialize_tree_data function call if using MC_TRUNC method for tree data.")
+            
+            self._initialize_tree_data_MC_TRUNC(check_generated_data, trunc_percentile)
+
 
         elif self.method == "GHQ":
             self._initialize_tree_data_GHQ(check_generated_data)
@@ -183,6 +190,106 @@ class TreePathDep():
                 self.full_data[per] = tmp_data
                 self.full_probs[per] = tmp_probs_norm
 
+    def _initialize_tree_data_MC_TRUNC(self, check_generated_data=False, trunc_percentile=None):
+        """Generate path independent tree with data from a distribution.
+
+        This function creates two dictionaries, both of which store data and probabilities
+        related to an assumed Gaussian distribution of a variable. The final period data
+        is generated from the distribution, and the data at each prior period is found
+        by taking expectations using backward induction.
+
+        We use the Cai and Judd (2015) methodology, see:
+        https://doi.org/10.1007/s00186-015-0495-z
+
+        Parameters
+        ----------
+        check_generated_data: bool (False)
+            print out generated data tree as a check
+        """
+        
+        # make empty dictionaries to populate
+        self.full_data = {}
+        self.full_probs = {}
+
+        N_periods_loop = self.N_periods - 1 # we only add nodes for periods not including the first
+
+        # number of final states in the tree, dictates how many draws from the distribution we take
+        N_final_states = self.base**N_periods_loop
+
+        # find transformation to cutoff distribution
+        # use sample average approximation to find the percentile value 
+        # (i.e., the raw number, rather than the percentile number)
+        perc_cutoff_samp = [np.percentile(np.random.normal(self.var_mean, self.var_std, int(1e5)), trunc_percentile) for i in range(1000)]
+        
+        # take avg
+        perc_cutoff = np.mean(perc_cutoff_samp)
+
+        # transformation factor for cutoff distribution
+        self.trans_factor = (self.var_mean - perc_cutoff) * self.var_std**(-1)
+
+        # find 'k' factor for the transformation
+        self.k = self._get_scale(bound=self.trans_factor)
+        
+        # make data for final period
+        x = np.random.normal(0, 1, size=N_final_states)
+        end_data = self.var_mean + (1 - np.exp(-self.k * x)) * (1 + np.exp(-self.k * x))**(-1) * self.trans_factor * self.var_std
+        end_data = sorted(end_data)[::-1]
+        end_probs = [1/len(end_data)] * len(end_data)
+
+        # check generated data and probabilities if you would like
+        if check_generated_data:
+            print("Sorted end data: ", end_data)
+            print("End probs: ", end_probs)
+
+        # loop through periods backwards and populate the full_data and full_probs dictionaries
+        for per in range(N_periods_loop, -1, -1):
+            # if we're in the final period, set the data and probs equal to end period values
+            if per == N_periods_loop:
+                self.full_data[per] = end_data
+                self.full_probs[per] = end_probs
+            
+            # if we're in the first period, we simply use the expectation of the entire distribution
+            elif per == 0:
+                self.full_data[per] = [self.var_mean]
+                self.full_probs[per] = [1.0]
+            
+            # if we're in an intermediate period, use *next period*'s values to compute expectations of what
+            # the value would be at that node
+            else:
+                # total number of nodes in next period
+                next_period_total_states = self.base**(per + 1)
+                
+                # make temporary indices to fill
+                tmp_ind_1 = 0
+                tmp_ind_2 = self.base
+                
+                # make empty arrays to populate data
+                tmp_data = []
+                tmp_probs = []
+
+                # loop through the upper bound index (tmp_ind_2) until we've exceeded the number of 
+                # states in the next period. that's how we know we're done.
+                while tmp_ind_2 < next_period_total_states+1:
+                    # values and probabilities at range of next nodes to be used in the expectation
+                    vals = self.full_data[per+1][tmp_ind_1:tmp_ind_2]
+                    probs = self.full_probs[per+1][tmp_ind_1:tmp_ind_2]
+                    
+                    # take expectation
+                    exp_val = sum([probs[i] * vals[i] for i in range(len(vals))])/ sum(probs)
+                    tmp_data.append(exp_val)
+                    tmp_probs.append(sum(probs))
+                    
+                    # index temporary indices
+                    tmp_ind_1 += self.base
+                    tmp_ind_2 += self.base
+                
+                # NORMALIZE PROBABILITIES TO ONE
+                tmp_probs_norm = [prob/sum(tmp_probs) for prob in tmp_probs]
+                
+                # populate final dictionaries
+                self.full_data[per] = tmp_data
+                self.full_probs[per] = tmp_probs_norm
+
     def _initialize_tree_data_GHQ(self, check_generated_data=False):
         """Generate path independent tree with data from a distribution.
 
@@ -214,6 +321,7 @@ class TreePathDep():
             print("Sorted data: ", self.trans_roots)
             print("Weights: ", self.weights)
         
+        # populate dictionaries
         self.full_data[0] = np.array([self.var_mean])
         self.full_probs[0] = np.array([1.0])
 
@@ -221,12 +329,17 @@ class TreePathDep():
         self.full_probs[1] = self.weights
 
     def _gen_ghq_roots(self):
+        """Import Gauss-Hermite quadrature roots.
+        """
+
         cwd = os.getcwd()
         ghq_file = cwd + "/data/cal/ghq_roots.csv"
         roots = np.genfromtxt(ghq_file, delimiter=',')[self.base-1]
         return roots[~np.isnan(roots)]
     
     def _gen_ghq_weights(self, roots):
+        """Using Hermite polynomials, generate weights.
+        """
         hermite_vals = self._get_hermite(roots, self.base-1)
         w_i = 2**(self.base-1) * np.math.factorial(self.base) * np.sqrt(np.pi) * (self.base**2 * hermite_vals**2)**(-1)
         return w_i * np.sqrt(np.pi)**(-1)
@@ -256,7 +369,7 @@ class TreePathDep():
             elif N == 1:
                 vals[i] = 2 * x[i]
             else:
-                # store previous two Chebyshev polynomial values
+                # store previous two Hermite polynomial values
                 herm_vals = [1.0, 2*x[i]]
 
                 # use recursion relation to find remaining values
@@ -347,3 +460,14 @@ class TreePathDep():
     def _get_cutoff_roots(self, x, scaling_factor, k):
         x = np.array(x)
         return self.var_mean + scaling_factor * (1 - np.exp(-k * x)) * (1 + np.exp(-k * x))**(-1) * self.var_std
+
+#np.random.seed(9324)
+
+t = TreePathDep(2, 500, 770, 220, "MC_TRUNC")
+t.initialize_tree_data(trunc_percentile=1)
+
+import matplotlib.pyplot as plt
+
+plt.hist(np.array(t.full_data[1]), bins=20)
+
+plt.show()

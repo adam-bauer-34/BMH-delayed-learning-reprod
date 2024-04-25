@@ -67,9 +67,9 @@ tf = 2100 # generally...?
 
 # import data
 t15_inv_base = xr.open_dataset(data_head_path + 'ar6_15_inv_output.nc')
-t15_inv_rec = open_datatree(data_head_path + 'ar6_15_N1_T40_B6_method1_inv_rp_data.nc')
+t15_inv_rec = open_datatree(data_head_path + 'ar6_15_N1_T40_B10_method3_inv_rp_data.nc')
 
-pers = np.arange(0.0, 80.0, 5.0)
+pers = np.arange(0.0, 40.0, 5.0)
 
 time = np.arange(0, 80, 1) + ti
 
@@ -127,6 +127,6 @@ no_ys = [0,1,2]
 for i in range(len(no_xs)):
     ax[no_xs[i], no_ys[i]].tick_params(axis='x', labelcolor='white')
 
-fig.savefig(basefile + 'ar6-sec-inv-eff-lt.png', dpi=400, bbox_inches='tight')
+fig.savefig(basefile + 'ar6-sec-inv-eff-lt-t15.png', dpi=400, bbox_inches='tight')
 
 plt.show()

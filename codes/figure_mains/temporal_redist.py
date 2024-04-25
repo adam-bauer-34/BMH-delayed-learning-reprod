@@ -118,13 +118,13 @@ tf = 2100 # generally...?
 
 # import data
 t15_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_15_inv_output.nc')
-t15_inv_rec = open_datatree(data_head_path + cal_prefix + '_15_N1_T40_B6_method1_inv_rp_data.nc')
+t15_inv_rec = open_datatree(data_head_path + cal_prefix + '_15_N1_T40_B10_method3_inv_rp_data.nc')
 
 t17_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_17_inv_output.nc')
-t17_inv_rec = open_datatree(data_head_path + cal_prefix + '_17_N1_T40_B6_method1_inv_rp_data.nc')
+t17_inv_rec = open_datatree(data_head_path + cal_prefix + '_17_N1_T40_B10_method3_inv_rp_data.nc')
 
 t2_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_2_inv_output.nc')
-t2_inv_rec = open_datatree(data_head_path + cal_prefix + '_2_N1_T40_B6_method1_inv_rp_data.nc')
+t2_inv_rec = open_datatree(data_head_path + cal_prefix + '_2_N1_T40_B10_method3_inv_rp_data.nc')
 
 # get objective for base and reecourse models
 pers = np.arange(0.0, 80.0, 5.0) # learning times
@@ -184,6 +184,7 @@ cstars_17_post_agg = np.sum(cstars_17_post, axis=1)
 cstars_2_pre_agg = np.sum(cstars_2_pre, axis=1)
 cstars_2_post_agg = np.sum(cstars_2_post, axis=1)
 
+"""
 # make figure~
 import matplotlib.transforms as mtransforms
 
@@ -221,9 +222,44 @@ for label in right:
 fig.legend([pre, post], ["Pre-{} Spending".format(cutoff), "Post-{} Spending".format(cutoff)], 
            bbox_to_anchor=(0.5, -0.11), 
            loc='lower center', ncol=3, fancybox=True, shadow=True, fontsize=22)
+"""
+
+# make figure~
+import matplotlib.transforms as mtransforms
+
+fig, ax = plt.subplot_mosaic([['a', 'b']], sharex=True,
+                             gridspec_kw={'height_ratios': [1], 'width_ratios': [1, 1]},
+                            figsize=(16,7.5), sharey=True)
+
+pre, = ax['a'].plot(time[::5], cstars_17_pre_agg/cstars_base_17_pre_agg, label="Pre-{} Spending".format(cutoff))
+post, = ax['a'].plot(time[::5], cstars_17_post_agg/cstars_base_17_post_agg, label="Post-{} Spending".format(cutoff))
+ax['a'].set_title(r"$T^* = 1.7 \ ^\circ$C")
+
+ax['b'].plot(time[::5], cstars_2_pre_agg/cstars_base_2_pre_agg, label="Pre-{} Spending".format(cutoff))
+ax['b'].plot(time[::5], cstars_2_post_agg/cstars_base_2_post_agg, label="Post-{} Spending".format(cutoff))
+ax['b'].set_title(r"$T^* = 2 \ ^\circ$C")
+
+for i in ['a', 'b']:
+    ax[i].set_xlim((2020,2050))
+    ax[i].set_xlabel("Year information is revealed")
+    
+#ax['a'].set_ylim((0.5,3.01))
+ax['a'].set_ylabel("Additional cost of uncertainty index")
+
+right = ['a', 'b']
+for label in right:
+    # label physical distance in and down:
+    trans = mtransforms.ScaledTranslation(0, 0.0, fig.dpi_scale_trans)
+    ax[label].text(0.9, 1.0, label, transform=ax[label].transAxes + trans, fontsize=22, fontweight='bold',
+            verticalalignment='top', bbox=dict(facecolor='none', edgecolor='none', pad=1))
+
+    
+fig.legend([pre, post], ["Pre-{} Spending".format(cutoff), "Post-{} Spending".format(cutoff)], 
+           bbox_to_anchor=(0.5, -0.11), 
+           loc='lower center', ncol=3, fancybox=True, shadow=True, fontsize=22)
 
 sns.despine(trim=True, offset=10)
 
-fig.savefig(basefile + cal_prefix + '-total-cost-ind-cutoff-{}.png'.format(int(cutoff)), dpi=400, bbox_inches='tight')
+fig.savefig(basefile + cal_prefix + '-total-cost-ind-cutoff-{}-without15.png'.format(int(cutoff)), dpi=400, bbox_inches='tight')
 
 plt.show()

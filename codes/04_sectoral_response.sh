@@ -7,7 +7,7 @@ python simulation_mains/invBase_cvxpy_main.py ar6_15 1 1
 
 echo 'Models with uncertainty...'
 
-python simulation_mains/invRec_RiskPrem_cvxpy_main.py ar6_15 N1_T40_B6 6 1 1
+python simulation_mains/invRec_RiskPrem_cvxpy_main.py ar6_15 N1_T40_B10 10 1 1
 
 echo 'Making Figure 4...'
 
