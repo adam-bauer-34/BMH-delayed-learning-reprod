@@ -21,14 +21,14 @@ ti = 2020
 tf = 2100 # generally...?
 
 # import data
-t15_inv_rec = open_datatree(data_head_path + 'ar6_17_N1_T40_B500_method2_inv_rp_data_short.nc')
+t17_inv_rec = open_datatree(data_head_path + 'ar6_17_N1_T40_B500_method2_inv_rp_data_short.nc')
 
 # distributions 
-scc_dist_2020 = t15_inv_rec['0.0']['0'].ds.scc.values[:,0]/(1/500)
+scc_dist_2020 = t17_inv_rec['0.0']['0'].ds.scc.values[:,0]/(1/500)
 
-B_dist = t15_inv_rec['0.0']['0'].ds.B_dist.values
+B_dist = t17_inv_rec['0.0']['0'].ds.B_dist.values
 
-scc_dist_2030 = t15_inv_rec['10.0']['1'].ds.scc.values[:,0]/(1/500)
+scc_dist_2030 = t17_inv_rec['10.0']['1'].ds.scc.values[:,0]/(1/500)
 
 import matplotlib.transforms as mtransforms
 
@@ -44,7 +44,7 @@ for i in range(2):
     ax[i].set_yscale('log')
     ax[i].set_xlabel("Remaining carbon budget when\ninformation is revealed (GtCO$_2$)")
     ax[i].spines[['right', 'top']].set_visible(True)
-    ax[i].set_ylim(ylo, 2000)
+    #ax[i].set_ylim(ylo, 2000)
     ax[i].grid(visible=True, axis='y', alpha=0.4, color='k', which='major', zorder=1)
 
 lf_0, uf_0 = 0.9, 1.1
@@ -73,10 +73,10 @@ ax0_top.set_xlabel("Remaining carbon budget\nat initialization (GtCO$_2$)", labe
 ax[0].set_ylabel(r"Carbon price (\$/tCO$_2$)")
 
 # 2030
-ax[1].scatter(B_dist-t15_inv_rec['10.0']['1'].ds.cumulative_emissions[1,0].values, 
+ax[1].scatter(B_dist-t17_inv_rec['10.0']['1'].ds.cumulative_emissions[1,0].values, 
          scc_dist_2030, zorder=10)
 
-ax[1].hist(B_dist-t15_inv_rec['10.0']['1'].ds.cumulative_emissions[1,0].values, 
+ax[1].hist(B_dist-t17_inv_rec['10.0']['1'].ds.cumulative_emissions[1,0].values, 
            color='#E69F00', alpha=xhist_alpha, bins=20, bottom=ylo, zorder=10, weights=np.ones_like(B_dist)*0.05)
 
 ax[1].hist(scc_dist_2030, orientation='horizontal', bins=5000, alpha=yhist_alpha,
@@ -92,7 +92,7 @@ ax1_top.set_xlim(ax[0].get_xlim())
 ax1_top.set_xticks([300,600,900,1200])
 ax1_top.set_xlabel("Remaining carbon budget\nat initialization (GtCO$_2$)", labelpad=20)
 ax[1].set_xlim((0,
-                max(B_dist-t15_inv_rec['10.0']['1'].ds.cumulative_emissions[1,0].values) * uf_0))
+                max(B_dist-t17_inv_rec['10.0']['1'].ds.cumulative_emissions[1,0].values) * uf_0))
 
 right = ['a', 'b']
 tracker = 0
@@ -103,6 +103,6 @@ for label in right:
             verticalalignment='top', bbox=dict(facecolor='none', edgecolor='none', pad=1))
     tracker += 1
 
-fig.savefig(basefile + 'carbon-price-dists-data-17.png', dpi=300, bbox_inches='tight')
+fig.savefig(basefile + 'carbon-price-dists-data-t17.png', dpi=300, bbox_inches='tight')
 
 plt.show()

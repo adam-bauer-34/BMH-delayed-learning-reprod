@@ -91,33 +91,25 @@ ti = 2020
 tf = 2100 # generally...?
 
 # import data
-t15_inv_base = xr.open_dataset(data_head_path + 'ar6_15_inv_output.nc')
-t15_inv_rec = open_datatree(data_head_path + 'ar6_15_N1_T40_B6_method1_inv_rp_data.nc')
-t15_inv_recbs = open_datatree(data_head_path + 'ar6bs_15_N1_T40_B6_method1_invBS_rp_data.nc')
-
 t17_inv_base = xr.open_dataset(data_head_path + 'ar6_17_inv_output.nc')
-t17_inv_rec = open_datatree(data_head_path + 'ar6_17_N1_T40_B6_method1_inv_rp_data.nc')
-t17_inv_recbs = open_datatree(data_head_path + 'ar6bs_17_N1_T40_B6_method1_invBS_rp_data.nc')
+t17_inv_rec = open_datatree(data_head_path + 'ar6_17_N1_T30_B8_method3_inv_rp_data.nc')
+t17_inv_recbs = open_datatree(data_head_path + 'ar6bs_17_N1_T30_B8_method3_invBS_rp_data.nc')
 
 t2_inv_base = xr.open_dataset(data_head_path + 'ar6_2_inv_output.nc')
-t2_inv_rec = open_datatree(data_head_path + 'ar6_2_N1_T40_B6_method1_inv_rp_data.nc')
-t2_inv_recbs = open_datatree(data_head_path + 'ar6bs_2_N1_T40_B6_method1_invBS_rp_data.nc')
+t2_inv_rec = open_datatree(data_head_path + 'ar6_2_N1_T30_B8_method3_inv_rp_data.nc')
+t2_inv_recbs = open_datatree(data_head_path + 'ar6bs_2_N1_T30_B8_method3_invBS_rp_data.nc')
 
 # total costs
-tot_t15_inv = get_tot_cost(t15_inv_rec)
 tot_t17_inv = get_tot_cost(t17_inv_rec)
 tot_t2_inv = get_tot_cost(t2_inv_rec)
 
-tot_t15_invbs = get_tot_cost(t15_inv_recbs, 'bs')
 tot_t17_invbs = get_tot_cost(t17_inv_recbs, 'bs')
 tot_t2_invbs = get_tot_cost(t2_inv_recbs, 'bs')
 
 # net of certainty
-VoL_t15_inv = get_VoL_tot_cost(t15_inv_base, t15_inv_rec)
 VoL_t17_inv = get_VoL_tot_cost(t17_inv_base, t17_inv_rec)
 VoL_t2_inv = get_VoL_tot_cost(t2_inv_base, t2_inv_rec)
 
-VoL_t15_invbs = get_VoL_tot_cost(t15_inv_base, t15_inv_recbs, 'bs')
 VoL_t17_invbs = get_VoL_tot_cost(t17_inv_base, t17_inv_recbs, 'bs')
 VoL_t2_invbs = get_VoL_tot_cost(t2_inv_base, t2_inv_recbs, 'bs')
 
@@ -130,14 +122,11 @@ fig, ax = plt.subplot_mosaic([['a', 'b']], sharex=True,
                             figsize=(20,8))
 
 # total cost of uncertainty
-t15, = ax['a'].plot(t15_inv_base.time.values[::5] + ti, tot_t15_inv/1000, linestyle=
-        'solid', color='#E69F00', label='$T^* = 1.5 \ ^\circ$C')
-t17, = ax['a'].plot(t15_inv_base.time.values[::5] + ti, tot_t17_inv/1000, linestyle='solid', color='#56B4E9', label='$T^* = 1.7 \ ^\circ$C')
-t2, = ax['a'].plot(t15_inv_base.time.values[::5] + ti, tot_t2_inv/1000, linestyle='solid', color='#009E73', label='$T^* = 2 \ ^\circ$C')
+t17, = ax['a'].plot(t17_inv_base.time.values[::5] + ti, tot_t17_inv/1000, linestyle='solid', color='#56B4E9', label='$T^* = 1.7 \ ^\circ$C')
+t2, = ax['a'].plot(t17_inv_base.time.values[::5] + ti, tot_t2_inv/1000, linestyle='solid', color='#009E73', label='$T^* = 2 \ ^\circ$C')
 
-ax['a'].plot(t15_inv_base.time.values[::5] + ti, tot_t15_invbs/1000, linestyle='dashed', color='#E69F00')
-ax['a'].plot(t15_inv_base.time.values[::5] + ti, tot_t17_invbs/1000, linestyle='dashed', color='#56B4E9')
-ax['a'].plot(t15_inv_base.time.values[::5] + ti, tot_t2_invbs/1000, linestyle='dashed', color='#009E73')
+ax['a'].plot(t17_inv_base.time.values[::5] + ti, tot_t17_invbs/1000, linestyle='dashed', color='#56B4E9')
+ax['a'].plot(t17_inv_base.time.values[::5] + ti, tot_t2_invbs/1000, linestyle='dashed', color='#009E73')
 
 ax['a'].set_ylabel("Total cost of policy (Trillions of $)")
 ax['a'].set_xlabel("Year information is revealed")
@@ -145,13 +134,11 @@ ax['a'].set_xlabel("Year information is revealed")
 ax['a'].set_yticks([5,10,15,20,25,30,35,40])
 
 # additional cost of uncertainty
-ax['b'].plot(t15_inv_base.time.values[::5] + ti, VoL_t15_inv/1000, linestyle='solid', color='#E69F00', label='$T^* = 1.5 \ ^\circ$C')
-ax['b'].plot(t15_inv_base.time.values[::5] + ti, VoL_t17_inv/1000, linestyle='solid', color='#56B4E9', label='$T^* = 1.7 \ ^\circ$C')
-ax['b'].plot(t15_inv_base.time.values[::5] + ti, VoL_t2_inv/1000, linestyle='solid', color='#009E73', label='$T^* = 2 \ ^\circ$C')
+ax['b'].plot(t17_inv_base.time.values[::5] + ti, VoL_t17_inv/1000, linestyle='solid', color='#56B4E9', label='$T^* = 1.7 \ ^\circ$C')
+ax['b'].plot(t17_inv_base.time.values[::5] + ti, VoL_t2_inv/1000, linestyle='solid', color='#009E73', label='$T^* = 2 \ ^\circ$C')
 
-ax['b'].plot(t15_inv_base.time.values[::5] + ti, VoL_t15_invbs/1000, linestyle='dashed', color='#E69F00')
-ax['b'].plot(t15_inv_base.time.values[::5] + ti, VoL_t17_invbs/1000, linestyle='dashed', color='#56B4E9')
-ax['b'].plot(t15_inv_base.time.values[::5] + ti, VoL_t2_invbs/1000, linestyle='dashed', color='#009E73')
+ax['b'].plot(t17_inv_base.time.values[::5] + ti, VoL_t17_invbs/1000, linestyle='dashed', color='#56B4E9')
+ax['b'].plot(t17_inv_base.time.values[::5] + ti, VoL_t2_invbs/1000, linestyle='dashed', color='#009E73')
 
 ax['b'].set_ylabel("Additional cost of uncertainty\n(Trillions of \$)")
 ax['b'].set_xlabel("Year information is revealed")
@@ -163,7 +150,7 @@ for label in right:
     ax[label].text(0.9, 1.0, label, transform=ax[label].transAxes + trans, fontsize=22, fontweight='bold',
             verticalalignment='top', bbox=dict(facecolor='none', edgecolor='none', pad=1))
     
-fig.legend([t15, t17, t2], ['$T^* = 1.5 \ ^\circ$C', '$T^* = 1.7 \ ^\circ$C', '$T^* = 2 \ ^\circ$C'], 
+fig.legend([t17, t2], ['$T^* = 1.5 \ ^\circ$C', '$T^* = 1.7 \ ^\circ$C', '$T^* = 2 \ ^\circ$C'], 
            bbox_to_anchor=(0.5, -0.1), 
            loc='lower center', ncol=3, fancybox=True, shadow=True, fontsize=22)
 

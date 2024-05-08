@@ -101,6 +101,9 @@ elif run_type == 'pow':
 elif run_type == 'emis':
     cal_prefix = 'ar6emis'
 
+elif run_type == 't15':
+    cal_prefix = 'ar6'
+
 else:
     raise ValueError("Invalid calibration type.")
 
@@ -115,151 +118,156 @@ data_head_path = ''.join([cwd, '/data/output/'])
 # initial year for plotting
 ti = 2020
 tf = 2100 # generally...?
-
-# import data
-t15_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_15_inv_output.nc')
-t15_inv_rec = open_datatree(data_head_path + cal_prefix + '_15_N1_T40_B10_method3_inv_rp_data.nc')
-
-t17_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_17_inv_output.nc')
-t17_inv_rec = open_datatree(data_head_path + cal_prefix + '_17_N1_T40_B10_method3_inv_rp_data.nc')
-
-t2_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_2_inv_output.nc')
-t2_inv_rec = open_datatree(data_head_path + cal_prefix + '_2_N1_T40_B10_method3_inv_rp_data.nc')
-
 # get objective for base and reecourse models
+
 pers = np.arange(0.0, 80.0, 5.0) # learning times
 
 time = np.arange(0, 80, 1) + ti
-
-# base models
-cstars_base_15 = get_base_t_dep_obj(t15_inv_base)
-cstars_base_17 = get_base_t_dep_obj(t17_inv_base)
-cstars_base_2 = get_base_t_dep_obj(t2_inv_base)
-
-# unceratinty models
-cstars_15 = get_rec_t_dep_obj(t15_inv_rec, pers)
-cstars_17 = get_rec_t_dep_obj(t17_inv_rec, pers)
-cstars_2 = get_rec_t_dep_obj(t2_inv_rec, pers)
-
-# define cutoff and plot 
 cutoff = 2030
 
-# base model, pre- and post-cutoff
-cstars_base_15_pre = np.sum(cstars_base_15[:, time<=cutoff], axis=1)
-cstars_base_15_post = np.sum(cstars_base_15[:, time>cutoff], axis=1)
+# import data
+if run_type == 't15':
+    t15_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_15_inv_output.nc')
+    t15_inv_rec = open_datatree(data_head_path + cal_prefix + '_15_15N1_T30_B8_method3_inv_rp_data.nc')
 
-cstars_base_17_pre = np.sum(cstars_base_17[:, time<=cutoff], axis=1)
-cstars_base_17_post = np.sum(cstars_base_17[:, time>cutoff], axis=1)
+    # base model and uncertainty model
+    cstars_base_15 = get_base_t_dep_obj(t15_inv_base)
+    cstars_15 = get_rec_t_dep_obj(t15_inv_rec, pers)
 
-cstars_base_2_pre = np.sum(cstars_base_2[:, time<=cutoff], axis=1)
-cstars_base_2_post = np.sum(cstars_base_2[:, time>cutoff], axis=1)
+    #base model, pre- and post-cutoff
+    cstars_base_15_pre = np.sum(cstars_base_15[:, time<=cutoff], axis=1)
+    cstars_base_15_post = np.sum(cstars_base_15[:, time>cutoff], axis=1)
 
-# unceratinty model, pre- and post-cutoff
-cstars_15_pre = np.sum(cstars_15[:,:, time<=cutoff], axis=2)
-cstars_15_post = np.sum(cstars_15[:,:, time>cutoff], axis=2)
+    # unceratinty model, pre- and post-cutoff
+    cstars_15_pre = np.sum(cstars_15[:,:, time<=cutoff], axis=2)
+    cstars_15_post = np.sum(cstars_15[:,:, time>cutoff], axis=2)
 
-cstars_17_pre = np.sum(cstars_17[:,:, time<=cutoff], axis=2)
-cstars_17_post = np.sum(cstars_17[:,:, time>cutoff], axis=2)
+    # base model aggregated across sectors
+    cstars_base_15_pre_agg = np.sum(cstars_base_15_pre, axis=0)
+    cstars_base_15_post_agg = np.sum(cstars_base_15_post, axis=0)
 
-cstars_2_pre = np.sum(cstars_2[:,:, time<=cutoff], axis=2)
-cstars_2_post = np.sum(cstars_2[:,:, time>cutoff], axis=2)
+    # uncertainty model, aggregated across sectors
+    cstars_15_pre_agg = np.sum(cstars_15_pre, axis=1)
+    cstars_15_post_agg = np.sum(cstars_15_post, axis=1)
 
-# base model, aggregated across sectors
-cstars_base_15_pre_agg = np.sum(cstars_base_15_pre, axis=0)
-cstars_base_15_post_agg = np.sum(cstars_base_15_post, axis=0)
+else:
+    t17_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_17_inv_output.nc')
+    t17_inv_rec = open_datatree(data_head_path + cal_prefix + '_17_N1_T30_B8_method3_inv_rp_data.nc')
 
-cstars_base_17_pre_agg = np.sum(cstars_base_17_pre, axis=0)
-cstars_base_17_post_agg = np.sum(cstars_base_17_post, axis=0)
+    t2_inv_base = xr.open_dataset(data_head_path + cal_prefix + '_2_inv_output.nc')
+    t2_inv_rec = open_datatree(data_head_path + cal_prefix + '_2_N1_T30_B8_method3_inv_rp_data.nc')
 
-cstars_base_2_pre_agg = np.sum(cstars_base_2_pre, axis=0)
-cstars_base_2_post_agg = np.sum(cstars_base_2_post, axis=0)
+    # base models
+    cstars_base_17 = get_base_t_dep_obj(t17_inv_base)
+    cstars_base_2 = get_base_t_dep_obj(t2_inv_base)
 
-# uncertainty model, aggregated across sectors
-cstars_15_pre_agg = np.sum(cstars_15_pre, axis=1)
-cstars_15_post_agg = np.sum(cstars_15_post, axis=1)
+    # unceratinty models
+    cstars_17 = get_rec_t_dep_obj(t17_inv_rec, pers)
+    cstars_2 = get_rec_t_dep_obj(t2_inv_rec, pers)
 
-cstars_17_pre_agg = np.sum(cstars_17_pre, axis=1)
-cstars_17_post_agg = np.sum(cstars_17_post, axis=1)
+    # base model, pre- and post-cutoff
+    cstars_base_17_pre = np.sum(cstars_base_17[:, time<=cutoff], axis=1)
+    cstars_base_17_post = np.sum(cstars_base_17[:, time>cutoff], axis=1)
 
-cstars_2_pre_agg = np.sum(cstars_2_pre, axis=1)
-cstars_2_post_agg = np.sum(cstars_2_post, axis=1)
+    cstars_base_2_pre = np.sum(cstars_base_2[:, time<=cutoff], axis=1)
+    cstars_base_2_post = np.sum(cstars_base_2[:, time>cutoff], axis=1)
 
-"""
-# make figure~
-import matplotlib.transforms as mtransforms
+    # unceratinty model, pre- and post-cutoff
+    cstars_17_pre = np.sum(cstars_17[:,:, time<=cutoff], axis=2)
+    cstars_17_post = np.sum(cstars_17[:,:, time>cutoff], axis=2)
 
-fig, ax = plt.subplot_mosaic([['a', 'b', 'c']], sharex=True,
-                             gridspec_kw={'height_ratios': [1], 'width_ratios': [1, 1, 1]},
-                            figsize=(24,7.5), sharey=True)
+    cstars_2_pre = np.sum(cstars_2[:,:, time<=cutoff], axis=2)
+    cstars_2_post = np.sum(cstars_2[:,:, time>cutoff], axis=2)
 
-pre, = ax['a'].plot(time[::5], cstars_15_pre_agg/cstars_base_15_pre_agg, label="Pre-{} Spending".format(cutoff))
-post, = ax['a'].plot(time[::5], cstars_15_post_agg/cstars_base_15_post_agg, label="Post-{} Spending".format(cutoff))
-ax['a'].set_title(r"$T^* = 1.5 \ ^\circ$C")
+    # base model, aggregated across sectors
+    cstars_base_17_pre_agg = np.sum(cstars_base_17_pre, axis=0)
+    cstars_base_17_post_agg = np.sum(cstars_base_17_post, axis=0)
 
-ax['b'].plot(time[::5], cstars_17_pre_agg/cstars_base_17_pre_agg, label="Pre-{} Spending".format(cutoff))
-ax['b'].plot(time[::5], cstars_17_post_agg/cstars_base_17_post_agg, label="Post-{} Spending".format(cutoff))
-ax['b'].set_title(r"$T^* = 1.7 \ ^\circ$C")
+    cstars_base_2_pre_agg = np.sum(cstars_base_2_pre, axis=0)
+    cstars_base_2_post_agg = np.sum(cstars_base_2_post, axis=0)
 
-ax['c'].plot(time[::5], cstars_2_pre_agg/cstars_base_2_pre_agg, label="Pre-{} Spending".format(cutoff))
-ax['c'].plot(time[::5], cstars_2_post_agg/cstars_base_2_post_agg, label="Post-{} Spending".format(cutoff))
-ax['c'].set_title(r"$T^* = 2 \ ^\circ$C")
+    # uncertainty model, aggregated across sectors
+    cstars_17_pre_agg = np.sum(cstars_17_pre, axis=1)
+    cstars_17_post_agg = np.sum(cstars_17_post, axis=1)
 
-for i in ['a', 'b', 'c']:
-    ax[i].set_xlim((2020,2050))
-    ax[i].set_xlabel("Year information is revealed")
-    
-#ax['a'].set_ylim((0.5,3.01))
-ax['a'].set_ylabel("Additional cost of uncertainty index")
-
-right = ['a', 'b', 'c']
-for label in right:
-    # label physical distance in and down:
-    trans = mtransforms.ScaledTranslation(0, 0.0, fig.dpi_scale_trans)
-    ax[label].text(0.9, 1.0, label, transform=ax[label].transAxes + trans, fontsize=22, fontweight='bold',
-            verticalalignment='top', bbox=dict(facecolor='none', edgecolor='none', pad=1))
-
-    
-fig.legend([pre, post], ["Pre-{} Spending".format(cutoff), "Post-{} Spending".format(cutoff)], 
-           bbox_to_anchor=(0.5, -0.11), 
-           loc='lower center', ncol=3, fancybox=True, shadow=True, fontsize=22)
-"""
+    cstars_2_pre_agg = np.sum(cstars_2_pre, axis=1)
+    cstars_2_post_agg = np.sum(cstars_2_post, axis=1)
 
 # make figure~
 import matplotlib.transforms as mtransforms
 
-fig, ax = plt.subplot_mosaic([['a', 'b']], sharex=True,
-                             gridspec_kw={'height_ratios': [1], 'width_ratios': [1, 1]},
-                            figsize=(16,7.5), sharey=True)
+if run_type == 't15':
+    # make figure~
+    fig, ax = plt.subplot_mosaic([['a']], sharex=True,
+                                gridspec_kw={'height_ratios': [1], 'width_ratios': [1]},
+                                figsize=(7.5,7.5), sharey=True)
 
-pre, = ax['a'].plot(time[::5], cstars_17_pre_agg/cstars_base_17_pre_agg, label="Pre-{} Spending".format(cutoff))
-post, = ax['a'].plot(time[::5], cstars_17_post_agg/cstars_base_17_post_agg, label="Post-{} Spending".format(cutoff))
-ax['a'].set_title(r"$T^* = 1.7 \ ^\circ$C")
+    pre, = ax['a'].plot(time[::5], cstars_15_pre_agg/cstars_base_15_pre_agg, label="Pre-{} Spending".format(cutoff))
+    post, = ax['a'].plot(time[::5], cstars_15_post_agg/cstars_base_15_post_agg, label="Post-{} Spending".format(cutoff), linestyle='solid')
+    ax['a'].set_title(r"$T^* = 1.5 \ ^\circ$C")
 
-ax['b'].plot(time[::5], cstars_2_pre_agg/cstars_base_2_pre_agg, label="Pre-{} Spending".format(cutoff))
-ax['b'].plot(time[::5], cstars_2_post_agg/cstars_base_2_post_agg, label="Post-{} Spending".format(cutoff))
-ax['b'].set_title(r"$T^* = 2 \ ^\circ$C")
+    for i in ['a']:
+        ax[i].set_xlim((2020,2050))
+        ax[i].set_xlabel("Year information is revealed")
+        
+    ax['a'].set_ylabel("Additional cost of uncertainty index")
 
-for i in ['a', 'b']:
-    ax[i].set_xlim((2020,2050))
-    ax[i].set_xlabel("Year information is revealed")
-    
-#ax['a'].set_ylim((0.5,3.01))
-ax['a'].set_ylabel("Additional cost of uncertainty index")
+    right = ['a']
+    for label in right:
+        # label physical distance in and down:
+        trans = mtransforms.ScaledTranslation(0, 0.0, fig.dpi_scale_trans)
+        ax[label].text(0.9, 1.0, label, transform=ax[label].transAxes + trans, fontsize=22, fontweight='bold',
+                verticalalignment='top', bbox=dict(facecolor='none', edgecolor='none', pad=1))
 
-right = ['a', 'b']
-for label in right:
-    # label physical distance in and down:
-    trans = mtransforms.ScaledTranslation(0, 0.0, fig.dpi_scale_trans)
-    ax[label].text(0.9, 1.0, label, transform=ax[label].transAxes + trans, fontsize=22, fontweight='bold',
-            verticalalignment='top', bbox=dict(facecolor='none', edgecolor='none', pad=1))
+        
+    fig.legend([pre, post], ["Pre-{} Spending".format(cutoff), "Post-{} Spending".format(cutoff)], 
+            bbox_to_anchor=(0.5, -0.11), 
+            loc='lower center', ncol=3, fancybox=True, shadow=True, fontsize=22)
 
-    
-fig.legend([pre, post], ["Pre-{} Spending".format(cutoff), "Post-{} Spending".format(cutoff)], 
-           bbox_to_anchor=(0.5, -0.11), 
-           loc='lower center', ncol=3, fancybox=True, shadow=True, fontsize=22)
+else:
+    fig, ax = plt.subplot_mosaic([['a', 'b']], sharex=True,
+                                gridspec_kw={'height_ratios': [1], 'width_ratios': [1, 1]},
+                                figsize=(16,7.5), sharey=True)
+
+    pre, = ax['a'].plot(time[::5], cstars_17_pre_agg/cstars_base_17_pre_agg, label="Pre-{} Spending".format(cutoff))
+    post, = ax['a'].plot(time[::5], cstars_17_post_agg/cstars_base_17_post_agg, label="Post-{} Spending".format(cutoff), linestyle='solid')
+    ax['a'].set_title(r"$T^* = 1.7 \ ^\circ$C")
+
+    ax['b'].plot(time[::5], cstars_2_pre_agg/cstars_base_2_pre_agg, label="Pre-{} Spending".format(cutoff))
+    ax['b'].plot(time[::5], cstars_2_post_agg/cstars_base_2_post_agg, label="Post-{} Spending".format(cutoff), linestyle='solid')
+    ax['b'].set_title(r"$T^* = 2 \ ^\circ$C")
+
+    for i in ['a', 'b']:
+        ax[i].set_xlim((2020,2050))
+        ax[i].set_xlabel("Year information is revealed")
+        
+    ax['a'].set_ylabel("Additional cost of uncertainty index")
+
+    right = ['a', 'b']
+    for label in right:
+        # label physical distance in and down:
+        trans = mtransforms.ScaledTranslation(0, 0.0, fig.dpi_scale_trans)
+        ax[label].text(0.9, 1.0, label, transform=ax[label].transAxes + trans, fontsize=22, fontweight='bold',
+                verticalalignment='top', bbox=dict(facecolor='none', edgecolor='none', pad=1))
+        
+    fig.legend([pre, post], ["Pre-{} Spending".format(cutoff), "Post-{} Spending".format(cutoff)], 
+            bbox_to_anchor=(0.5, -0.11), 
+            loc='lower center', ncol=3, fancybox=True, shadow=True, fontsize=22)
+
+if run_type == 'low-linear':
+    ax['a'].set_yticks([0.5, 1., 1.5, 2, 2.5, 3, 3.5, 4])
+    ax['b'].set_yticks([0.5, 1., 1.5, 2, 2.5, 3, 3.5, 4])
+    ax['a'].set_ylim((0.4, 4.1))
+
+if run_type == 'pow':
+    ax['a'].set_ylim((0.4, 10.1))
 
 sns.despine(trim=True, offset=10)
 
-fig.savefig(basefile + cal_prefix + '-total-cost-ind-cutoff-{}-without15.png'.format(int(cutoff)), dpi=400, bbox_inches='tight')
+if run_type == 't15':
+    fig.savefig(basefile + cal_prefix + '-total-cost-ind-cutoff-{}-t15.png'.format(int(cutoff)), dpi=400, bbox_inches='tight')
+
+else:
+    fig.savefig(basefile + cal_prefix + '-total-cost-ind-cutoff-{}.png'.format(int(cutoff)), dpi=400, bbox_inches='tight')
 
 plt.show()

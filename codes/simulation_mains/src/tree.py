@@ -460,14 +460,3 @@ class TreePathDep():
     def _get_cutoff_roots(self, x, scaling_factor, k):
         x = np.array(x)
         return self.var_mean + scaling_factor * (1 - np.exp(-k * x)) * (1 + np.exp(-k * x))**(-1) * self.var_std
-
-#np.random.seed(9324)
-
-t = TreePathDep(2, 500, 770, 220, "MC_TRUNC")
-t.initialize_tree_data(trunc_percentile=1)
-
-import matplotlib.pyplot as plt
-
-plt.hist(np.array(t.full_data[1]), bins=20)
-
-plt.show()

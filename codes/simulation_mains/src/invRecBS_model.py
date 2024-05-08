@@ -128,9 +128,10 @@ class INVRecourseModelWithBS():
         generate capital depreciations for abatement investment for t < T
     """
 
-    def __init__(self, cal, rec_cal):
+    def __init__(self, cal, rec_cal, scale=1.):
         self.cal = cal # calibration name
         self.rec_cal = rec_cal
+        self.scale = float(scale)
 
         # if the calibration name is not a string, throw an error
         if not isinstance(self.cal, str) and not ininstance(self.rec_cal, str):
@@ -206,7 +207,7 @@ class INVRecourseModelWithBS():
         # NOTE: the KeyError comes from the fact that df_secs.loc['cbar'] has no entries
         try:
             self.cbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                      value=df_secs.loc['cbar'].values/1000.)
+                                      value=df_secs.loc['cbar'].values/self.scale)
 
         except KeyError:
             # make relative costs for calibration
@@ -227,12 +228,22 @@ class INVRecourseModelWithBS():
 
         if self.method == 0:
             self.method = 'MC'
+            self.trunc_percentile = None
 
         elif self.method == 1:
             self.method = "GHQ"
+            self.trunc_percentile = None
+
+        elif self.method == 2:
+            self.method = "MC_TRUNC"
+            self.trunc_percentile = df_rec['trunc_percentile'].values[0]
+
+        elif self.method == 3:
+            self.method = "GHQ_TRUNC"
+            self.trunc_percentile = df_rec['trunc_percentile'].values[0]
 
         else:
-            raise ValueError("Invalid method passed from recourse parameter file. Currently supported methods are:\n0 = 'MC' (Monte Carlo sampling)\n1 = 'GHQ' (Gauss-Hermite quadrature)")
+            raise ValueError("Invalid method passed from recourse parameter file. Currently supported methods are:\n0 = 'MC' (Monte Carlo sampling)\n1 = 'GHQ' (Gauss-Hermite quadrature)\n2 = 'MC_TRUNC' (truncated Monte Carlo)\n3 = 'GHQ_TRUNC' (Gauss-Hermite quadrature, truncated)")
 
     def _cal_model(self):
         """Calibrate abatement investment model.
@@ -257,7 +268,7 @@ class INVRecourseModelWithBS():
         self.cbars = cp.Parameter(self.N_secs, nonneg=True, value=cbars_val)
 
         # save calibration to a csv
-        df = pd.DataFrame([self.gbars, self.abars.value, self.deltas.value, self.a_0s.value, 1000*self.cbars.value],
+        df = pd.DataFrame([self.gbars, self.abars.value, self.deltas.value, self.a_0s.value, self.scale*self.cbars.value],
                               index=['gbar', 'abar', 'delta', 'a_0', 'cbar'], 
                               columns=self.sectors)
 
@@ -279,7 +290,7 @@ class INVRecourseModelWithBS():
 
         print("Initializing data tree...")
         self.tree = TreePathDep(self.N_periods, self.base, self.B.value, self.B_std, method=self.method)
-        self.tree.initialize_tree_data()
+        self.tree.initialize_tree_data(trunc_percentile=self.trunc_percentile)
         print("Done!")
 
         if print_outcome:
@@ -559,7 +570,7 @@ class INVRecourseModelWithBS():
             self.prob.solve(solver=cp.GUROBI, verbose=False)
         
         else:
-            self.prob.solve(solver=cp.GUROBI, verbose=verbose)
+            self.prob.solve(solver=cp.GUROBI, verbose=verbose, OptimalityTol=1e-9, BarQCPConvTol=1e-12, BarConvTol=1e-12)
 
         # get statistics from solver 
         self.solve_stats = self.prob.solver_stats
@@ -622,7 +633,7 @@ class INVRecourseModelWithBS():
         for per in range(self.N_periods):
             scc_proc_tmp = []
             for state in range(self.tree.N_nodes_per_period[per]):
-                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * 1000)
+                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * self.scale)
                 tmp_const_ind += 1
             self.scc_proc[per] = scc_proc_tmp
 
@@ -635,7 +646,7 @@ class INVRecourseModelWithBS():
                         'abatement': (['state', 'sector', 'time_state'], self.a_proc[per]),
                         'cumulative_emissions': (['state', 'time_state'], self.psi_proc[per]),
                         'scc': (['state', 'time'], self.scc_proc[per]),
-                        'cbars': (['sector'], self.cbars.value * 1000),
+                        'cbars': (['sector'], self.cbars.value * self.scale),
                         'abars': (['sector'], self.abars.value),
                         'deltas': (['sector'], self.deltas.value),
                         'a_0s': (['sector'], self.a_0s.value),
@@ -650,7 +661,7 @@ class INVRecourseModelWithBS():
         # make DataTree object with parent coordinate named 'period'
         self.data_tree = DataTree.from_dict(datatree_dict, 'period')
 
-        self.data_tree['0'].attrs = {'total_cost': self.prob.value * 1000,
+        self.data_tree['0'].attrs = {'total_cost': self.prob.value * self.scale,
                          'r': self.r.value,
                          'beta':self.beta.value,
                          'dt': self.dt.value,

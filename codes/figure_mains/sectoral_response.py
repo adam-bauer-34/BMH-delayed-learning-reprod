@@ -66,14 +66,14 @@ ti = 2020
 tf = 2100 # generally...?
 
 # import data
-t15_inv_base = xr.open_dataset(data_head_path + 'ar6_15_inv_output.nc')
-t15_inv_rec = open_datatree(data_head_path + 'ar6_15_N1_T40_B10_method3_inv_rp_data.nc')
+t17_inv_base = xr.open_dataset(data_head_path + 'ar6_17_inv_output.nc')
+t17_inv_rec = open_datatree(data_head_path + 'ar6_17_N1_T30_B8_method3_inv_rp_data.nc')
 
-pers = np.arange(0.0, 40.0, 5.0)
+pers = np.arange(0.0, 35.0, 5.0)
 
 time = np.arange(0, 80, 1) + ti
 
-cstars, astars = get_rec_t_dep_obj(t15_inv_rec, pers)
+cstars, astars = get_rec_t_dep_obj(t17_inv_rec, pers)
 
 import matplotlib.transforms as mtransforms
 
@@ -83,7 +83,7 @@ jet = cm = plt.get_cmap('magma')
 cNorm  = colors.Normalize(vmin=ti, vmax=max(pers)+ti)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 
-sec = t15_inv_base.sector.values
+sec = t17_inv_base.sector.values
 sec_x = [0,0,0,0,1,1,1]
 sec_y = [0,1,2,3,0,1,2]
 
@@ -127,6 +127,6 @@ no_ys = [0,1,2]
 for i in range(len(no_xs)):
     ax[no_xs[i], no_ys[i]].tick_params(axis='x', labelcolor='white')
 
-fig.savefig(basefile + 'ar6-sec-inv-eff-lt-t15.png', dpi=400, bbox_inches='tight')
+fig.savefig(basefile + 'ar6-sec-inv-eff-lt-t17.png', dpi=400, bbox_inches='tight')
 
 plt.show()

@@ -28,3 +28,4 @@ m.prob_init(print_outcome=False)
 # if you're interested, solve the model
 if solve_model:
     m.solve_opt(save_output=save_output)
+    print(m.prob.status)

@@ -34,11 +34,11 @@ learning_times = np.arange(0.0, 80.0, dt)
 
 data_tree_dict = {}
 for Tstar in learning_times:
-    # reset seed so every time we initiate the tree we get the same RCB distribution
-    np.random.seed(9324)
-
     # temporary model class
     # if Tstar = 0, run the expectation version, if Tstar > 0, run the proper recourse model
+
+    print("\n------------------------------\nWE ARE ON T*={}.\n------------------------------\n".format(Tstar))
+
     if Tstar == 0:
         tmp_m = INVRecourseModelExpWithBS(cal, N_samples, method)
     
