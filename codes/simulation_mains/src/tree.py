@@ -460,3 +460,11 @@ class TreePathDep():
     def _get_cutoff_roots(self, x, scaling_factor, k):
         x = np.array(x)
         return self.var_mean + scaling_factor * (1 - np.exp(-k * x)) * (1 + np.exp(-k * x))**(-1) * self.var_std
+
+"""
+t = TreePathDep(1, 8, 770, 220, 'GHQ_TRUNC')
+
+t.initialize_tree_data(trunc_percentile=1)
+
+print(t.trans_factor)
+"""
