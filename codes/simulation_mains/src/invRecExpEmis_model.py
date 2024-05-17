@@ -216,11 +216,13 @@ class INVRecourseModelExpEmis():
         self.N_periods = 1  # number of "learning points" (there's only one, and it's right at the beginning)
 
         if self.method == 0:
+            self.method = 'MC'
             # make uncertainty params for Monte Carlo-based sampling method
             self.B_dist = sorted(np.random.normal(loc=self.B.value, scale=self.B_std, size=self.N_samples))[::-1] # make dist 
             self.probs = [1/self.N_samples] * self.N_samples # probabilities
 
         elif self.method == 1:
+            self.method = "GHQ"
             # make dummy tree to extract data and weights from for GHQ-based expectation operator
             self.tree = TreePathDep(2, self.N_samples, self.B.value, self.B_std, method="GHQ")
             self.tree.initialize_tree_data()
@@ -229,8 +231,28 @@ class INVRecourseModelExpEmis():
             self.B_dist = self.tree.full_data[1]
             self.probs = self.tree.full_probs[1]
 
+        elif self.method == 2:
+            self.method = "MC_TRUNC"
+            # make dummy tree to extract data and weights from for GHQ-based expectation operator
+            self.tree = TreePathDep(2, self.N_samples, self.B.value, self.B_std, method="MC_TRUNC")
+            self.tree.initialize_tree_data(trunc_percentile=1)
+
+            # set values a la the way I did it for the MC method
+            self.B_dist = self.tree.full_data[1]
+            self.probs = self.tree.full_probs[1]
+
+        elif self.method == 3:
+            self.method = "GHQ_TRUNC"
+            # make dummy tree to extract data and weights from for GHQ-based expectation operator
+            self.tree = TreePathDep(2, self.N_samples, self.B.value, self.B_std, method="GHQ_TRUNC")
+            self.tree.initialize_tree_data(trunc_percentile=1)
+
+            # set values a la the way I did it for the MC method
+            self.B_dist = self.tree.full_data[1]
+            self.probs = self.tree.full_probs[1]
+
         else:
-            raise ValueError("Invalid method passed from recourse parameter file. Currently supported methods are:\n0 = 'MC' (Monte Carlo sampling)\n1 = 'GHQ' (Gauss-Hermite quadrature)")
+            raise ValueError("Invalid method passed from recourse parameter file. Currently supported methods are:\n0 = 'MC' (Monte Carlo sampling)\n1 = 'GHQ' (Gauss-Hermite quadrature)\n2 = 'MC_TRUNC' (truncated Monte Carlo)\n3 = 'GHQ_TRUNC' (Gauss-Hermite quadrature, truncated)")
 
     def _cal_model(self):
         """Calibrate abatement investment model.

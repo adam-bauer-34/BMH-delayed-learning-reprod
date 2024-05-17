@@ -189,15 +189,24 @@ class MACRecourseModelEmis():
 
         # get, and set, type of intergration method for the expectation operator in the objective function
         self.method = int(df_rec['method'].values[0]) # type of integration in expectation operator
-
         if self.method == 0:
             self.method = 'MC'
+            self.trunc_percentile = None
 
         elif self.method == 1:
             self.method = "GHQ"
+            self.trunc_percentile = None
+
+        elif self.method == 2:
+            self.method = "MC_TRUNC"
+            self.trunc_percentile = df_rec['trunc_percentile'].values[0]
+
+        elif self.method == 3:
+            self.method = "GHQ_TRUNC"
+            self.trunc_percentile = df_rec['trunc_percentile'].values[0]
 
         else:
-            raise ValueError("Invalid method passed from recourse parameter file. Currently supported methods are:\n0 = 'MC' (Monte Carlo sampling)\n1 = 'GHQ' (Gauss-Hermite quadrature)")
+            raise ValueError("Invalid method passed from recourse parameter file. Currently supported methods are:\n0 = 'MC' (Monte Carlo sampling)\n1 = 'GHQ' (Gauss-Hermite quadrature)\n2 = 'MC_TRUNC' (truncated Monte Carlo)\n3 = 'GHQ_TRUNC' (Gauss-Hermite quadrature, truncated)")
 
     def tree_init(self, print_outcome=False):
         """Initialize information tree based on RCB parameters above.
@@ -210,7 +219,7 @@ class MACRecourseModelEmis():
 
         print("Initializing data tree...")
         self.tree = TreePathDep(self.N_periods, self.base, self.B.value, self.B_std, method=self.method)
-        self.tree.initialize_tree_data()
+        self.tree.initialize_tree_data(trunc_percentile=self.trunc_percentile)
         print("Done!")
 
         if print_outcome:

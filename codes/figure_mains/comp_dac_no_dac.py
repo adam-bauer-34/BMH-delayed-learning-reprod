@@ -43,12 +43,12 @@ ti = 2020
 tf = 2100 # generally...?
 
 # import data
-t15_inv_base = xr.open_dataset(data_head_path + 'ar6_15_inv_output.nc')
-t15_inv_rec = open_datatree(data_head_path + 'ar6_15_N1_T40_B6_GHQ_invrec_output.nc')
-t15_inv_recbs = open_datatree(data_head_path + 'ar6bs_15_GHQ_invrec_output.nc')
+t17_inv_base = xr.open_dataset(data_head_path + 'ar6_17_inv_output.nc')
+t17_inv_rec = open_datatree(data_head_path + 'ar6_17_N1_T30_B8_GHQ_TRUNC_invrec_output.nc')
+t17_inv_recbs = open_datatree(data_head_path + 'ar6bs_17_GHQ_TRUNC_invrec_output.nc')
 
-t15_inv_costs_mean_sec = get_rec_t_dep_obj(t15_inv_rec, [1.])[0]
-t15_invbs_costs_mean_sec = get_rec_t_dep_obj(t15_inv_recbs, [1.], True)[0]
+t17_inv_costs_mean_sec = get_rec_t_dep_obj(t17_inv_rec, [1.])[0]
+t17_invbs_costs_mean_sec = get_rec_t_dep_obj(t17_inv_recbs, [1.], True)[0]
 
 fig, ax = plt.subplots(2,4, figsize=(25, 14), sharex=True)
 
@@ -58,44 +58,44 @@ y_inds = [0,1,2,3,0,1,2,3]
 track = 1
 rec_time = np.arange(0,80,1)
 
-cert, = ax[0,0].plot(t15_inv_base.time + ti, 
-                    (0.5 * t15_inv_base.cbars.values[0] * t15_inv_base.investment.values[0]**2))
-nodac_avg, = ax[0,0].plot(rec_time + ti, t15_inv_costs_mean_sec[0],
+cert, = ax[0,0].plot(t17_inv_base.time + ti, 
+                    (0.5 * t17_inv_base.cbars.values[0] * t17_inv_base.investment.values[0]**2))
+nodac_avg, = ax[0,0].plot(rec_time + ti, t17_inv_costs_mean_sec[0],
                                       linestyle='solid', color='#E69F00')
-dac_avg, = ax[0,0].plot(rec_time + ti, t15_invbs_costs_mean_sec[0],
+dac_avg, = ax[0,0].plot(rec_time + ti, t17_invbs_costs_mean_sec[0],
                                       linestyle='solid', color='#56B4E9')
 
 for i in range(1, len(x_inds)):
     if track != 7:
-        ax[x_inds[i], y_inds[i]].plot(t15_inv_base.time + ti, (0.5 * t15_inv_base.cbars.values[i] * t15_inv_base.investment.values[i]**2), label="Certainty policy")
-        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t15_inv_costs_med_sec[i], label="Recourse: Median",
+        ax[x_inds[i], y_inds[i]].plot(t17_inv_base.time + ti, (0.5 * t17_inv_base.cbars.values[i] * t17_inv_base.investment.values[i]**2), label="Certainty policy")
+        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_inv_costs_med_sec[i], label="Recourse: Median",
         #                              linestyle='dashed', color='#E69F00')
-        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t15_inv_costs_mean_sec[i], label="Average investment without DAC",
+        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_inv_costs_mean_sec[i], label="Average investment without DAC",
                                       linestyle='solid', color='#E69F00')
-        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t15_inv_costs_5p_sec[i], t15_inv_costs_95p_sec[i], 
+        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t17_inv_costs_5p_sec[i], t17_inv_costs_95p_sec[i], 
         #                                      label=r"Recourse: 5$^{\rm{th}}-$95$^{\rm{th}}$ quantile range",
         #                                      alpha=0.4, color='#E69F00')
     
-        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t15_invbs_costs_med_sec[i], label="RecourseBS: Median",
+        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_invbs_costs_med_sec[i], label="RecourseBS: Median",
         #                              linestyle='dashed', color='#56B4E9')
-        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t15_invbs_costs_mean_sec[i],
+        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_invbs_costs_mean_sec[i],
                                       linestyle='solid', color='#56B4E9', label="Average investment with DAC")
-        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t15_invbs_costs_5p_sec[i], t15_invbs_costs_95p_sec[i], 
+        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t17_invbs_costs_5p_sec[i], t17_invbs_costs_95p_sec[i], 
         #                                      alpha=0.4, color='#56B4E9')
         
     else:
-        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t15_invbs_costs_med_sec[i], label="Recourse: Median",
+        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_invbs_costs_med_sec[i], label="Recourse: Median",
         #                              linestyle='dashed', color='#56B4E9')
-        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t15_invbs_costs_mean_sec[i], label="Recourse: Mean",
+        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_invbs_costs_mean_sec[i], label="Recourse: Mean",
                                       linestyle='solid', color='#56B4E9')
-        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t15_invbs_costs_5p_sec[i], t15_invbs_costs_95p_sec[i], 
+        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t17_invbs_costs_5p_sec[i], t17_invbs_costs_95p_sec[i], 
         #                                      label=r"Recourse: 5$^{\rm{th}}-$95$^{\rm{th}}$ quantile range",
         #                                      alpha=0.4, color='#56B4E9')
         
     N_periods = 2
     for per in range(N_periods-1):
-        tmp_dec_time = t15_inv_rec[str(per)].ds.time.values[-1] + ti
-        ax[x_inds[i], y_inds[i]].vlines(tmp_dec_time, 0.0, max(t15_invbs_costs_mean_sec[i]) * 1.02, 
+        tmp_dec_time = t17_inv_rec[str(per)].ds.time.values[-1] + ti
+        ax[x_inds[i], y_inds[i]].vlines(tmp_dec_time, 0.0, max(t17_invbs_costs_mean_sec[i]) * 1.02, 
                                         color='grey', linestyle='dotted', linewidth=1.25)
     track += 1
 
@@ -108,8 +108,8 @@ fig.legend([cert, nodac_avg, dac_avg],
 #fig.subplots_adjust(wspace=0.4, hspace=0.2)
 
 for i in range(len(x_inds)):
-    #ax[x_inds[i], y_inds[i]].set_ylim(0, 1.2 * (0.5 * t15_inv_base.cbars.values[i] * t15_inv_base.abars.values[i]**2))
-    ax[x_inds[i], y_inds[i]].set_title(t15_inv_recbs['0'].ds.sector.values[i])
+    #ax[x_inds[i], y_inds[i]].set_ylim(0, 1.2 * (0.5 * t17_inv_base.cbars.values[i] * t17_inv_base.abars.values[i]**2))
+    ax[x_inds[i], y_inds[i]].set_title(t17_inv_recbs['0'].ds.sector.values[i])
     
 for i in range(2):
     ax[i, 0].set_ylabel("Total investment effort\n(Billions of \$ yr$^{-1}$)")
@@ -120,6 +120,6 @@ for i in range(3):
 #fig.tight_layout()
 sns.despine(trim=True, offset=10)
 
-fig.savefig(basefile + 't15-inv-base-rec-comparision-cost-secs-withbs.png', dpi=300)
+fig.savefig(basefile + 't17-inv-base-rec-comparision-cost-secs-withbs.png', dpi=300)
 
 plt.show()
