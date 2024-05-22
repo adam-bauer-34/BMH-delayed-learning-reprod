@@ -249,10 +249,10 @@ ax['d'].set_ylabel("Uncertainty-inertia interaction index\n(1 = MAC total policy
 ax['d'].set_xlabel("Year information is revealed")
 
 if run_type == 'low-linear':
-    ax['a'].set_yticks([5, 15, 25, 35])
+    ax['a'].set_yticks([0, 10, 20, 30, 40])
     ax['b'].set_yticks([0, 5, 10, 15, 20])
-    ax['c'].set_yticks([0, 0.2, 0.4, 0.6])
-    ax['d'].set_yticks([1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6])
+    ax['c'].set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax['d'].set_yticks([1, 1.2, 1.4, 1.6, 1.8])
 
 right = ['a', 'b', 'c', 'd']
 for label in right:
@@ -271,4 +271,4 @@ if run_type == 't15':
 else:
     fig.savefig(basefile + cal_prefix + '-pfig-value-of-learning-quadbox.png', dpi=400, bbox_inches='tight')    
 
-#plt.show()
+plt.show()

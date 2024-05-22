@@ -255,9 +255,9 @@ else:
             loc='lower center', ncol=3, fancybox=True, shadow=True, fontsize=22)
 
 if run_type == 'low-linear':
-    ax['a'].set_yticks([0.5, 1., 1.5, 2, 2.5, 3, 3.5, 4])
-    ax['b'].set_yticks([0.5, 1., 1.5, 2, 2.5, 3, 3.5, 4])
-    ax['a'].set_ylim((0.4, 4.1))
+    ax['a'].set_yticks([0.5, 1., 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5])
+    ax['b'].set_yticks([0.5, 1., 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5])
+    ax['a'].set_ylim((0.4, 5.1))
 
 if run_type == 'pow':
     ax['a'].set_ylim((0.4, 10.1))
