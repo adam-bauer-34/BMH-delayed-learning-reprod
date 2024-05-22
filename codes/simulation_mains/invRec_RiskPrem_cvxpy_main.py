@@ -31,7 +31,7 @@ save_output = int(sys.argv[5])
 dt = 5.0
 learning_times = np.arange(0.0, 80.0, dt)
 
-if cal=='ar6pow_15':
+if cal=='ar6pow_17' or cal=='ar6pow_2':
     scale = np.ones_like(learning_times) * 1e5
     scale[2] = 5e3
     scale[learning_times>=40.0] = 1e5

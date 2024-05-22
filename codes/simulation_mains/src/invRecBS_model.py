@@ -567,10 +567,14 @@ class INVRecourseModelWithBS():
 
         # solve problem
         if suppress_prints:
-            self.prob.solve(solver=cp.GUROBI, verbose=False)
+            self.prob.solve(solver=cp.GUROBI, verbose=False,
+                            OptimalityTol=1e-9, BarQCPConvTol=1e-12,
+                            BarConvTol=1e-12)
         
         else:
-            self.prob.solve(solver=cp.GUROBI, verbose=verbose, OptimalityTol=1e-9, BarQCPConvTol=1e-12, BarConvTol=1e-12)
+            self.prob.solve(solver=cp.GUROBI, verbose=verbose,
+                            OptimalityTol=1e-9, BarQCPConvTol=1e-12,
+                            BarConvTol=1e-12)
 
         # get statistics from solver 
         self.solve_stats = self.prob.solver_stats
@@ -580,6 +584,10 @@ class INVRecourseModelWithBS():
         # if we save the output, save it (so long as the optimizer returned the optimal result)
         if save_output and self.prob.status == 'optimal':
             self._save_output(print_outcome)
+
+        if save_output and self.prob.status == 'optimal_inaccurate':
+            self._save_output(print_outcome)
+            raise Warning("Solution is optimal_inaccurate, check solution for accuracy!")
         
         elif cal_purposes and self.prob.status=='optimal':
             print("MAC model finished with optimal status.")
