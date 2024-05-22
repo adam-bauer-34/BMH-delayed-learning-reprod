@@ -19,4 +19,4 @@ python simulation_mains/macRec_RiskPrem_cvxpy_main.py ar6_2 15N1_T30_B8 8 3 1
 
 echo 'Making Figure 14...'
 
-python figure_mains/effect_of_learning.py t15
+python figure_mains/effect_of_learning.py low-linear
