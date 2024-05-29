@@ -17,6 +17,6 @@ python simulation_mains/invRecEmis_RiskPrem_cvxpy_main.py ar6emis_2 N1_T30_B8 8 
 python simulation_mains/macRecEmis_RiskPrem_cvxpy_main.py ar6emis_17 N1_T30_B8 8 3 1
 python simulation_mains/macRecEmis_RiskPrem_cvxpy_main.py ar6emis_2 N1_T30_B8 8 3 1
 
-echo 'Making Figure 8...'
+echo 'Making SI Figure 3...'
 
 python figure_mains/effect_of_learning.py emis

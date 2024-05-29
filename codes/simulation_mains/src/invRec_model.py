@@ -549,7 +549,7 @@ class INVRecourseModel():
         # solve problem
         if suppress_prints:
             self.prob.solve(solver=cp.GUROBI, verbose=False)
-        
+
         else:
             self.prob.solve(solver=cp.GUROBI, verbose=verbose)
 

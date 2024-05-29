@@ -17,6 +17,6 @@ python simulation_mains/invRec_RiskPrem_cvxpy_main.py ar6pow_2 N1_T30_B8 8 3 1
 python simulation_mains/macRec_RiskPrem_cvxpy_main.py ar6pow_17 N1_T30_B8 8 3 1
 python simulation_mains/macRec_RiskPrem_cvxpy_main.py ar6pow_2 N1_T30_B8 8 3 1
 
-echo 'Making Figure 13...'
+echo 'Making SI Figure 08...'
 
 python figure_mains/temporal_redist.py pow

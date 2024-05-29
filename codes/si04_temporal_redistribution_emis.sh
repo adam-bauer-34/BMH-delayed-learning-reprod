@@ -11,6 +11,6 @@ echo 'Models with uncertainty...'
 python simulation_mains/invRecEmis_RiskPrem_cvxpy_main.py ar6emis_17 N1_T30_B8 8 3 1
 python simulation_mains/invRecEmis_RiskPrem_cvxpy_main.py ar6emis_2 N1_T30_B8 8 3 1
 
-echo 'Making Figure 9...'
+echo 'Making SI Figure 4...'
 
 python figure_mains/temporal_redist.py emis

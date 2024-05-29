@@ -16,6 +16,6 @@ echo 'With DAC...'
 python simulation_mains/invRecBS_RiskPrem_cvxpy_main.py ar6bs_17 N1_T30_B8 8 3 1
 python simulation_mains/invRecBS_RiskPrem_cvxpy_main.py ar6bs_2 N1_T30_B8 8 3 1
 
-echo 'Making Figure 6...'
+echo 'Making SI Figure 1...'
 
 python figure_mains/effect_of_learning_dac.py
