@@ -1,4 +1,5 @@
-# Reproduction code package for "How delayed learning about climate uncertainty impacts decarbonization investment strategies"
+#
+Reproduction code package for "How delayed learning about climate uncertainty impacts decarbonization investment strategies"
 
 By: Adam Michael Bauer -- adammb4 [at] illinois [dot] edu
 
@@ -10,23 +11,23 @@ This set of codes reproduces all of the figures and analysis carried out in *How
 
 Each code is assigned a number corresponding to the figure it creates. Note an `si` before the script name indicates that figure is in the *Supplementary Information*. So code `01_xxx.py` makes Figure 1 from the *main text*, which shows our calibration of the marginal abatement cost curves, while code `si01_xxx.py` makes the Figure 1 from the *Supplementary Information*. Here is the full table for both versions:
 
-| Figure Desired | Code to Run |
-|----------|----------|
-| Figure 1: Calibrating marginal abatement costs | `01_mac_calibration.sh` |
-| Figure 2: Effect of delayed learning on aggregate policy cost | `02_effect_of_learning_low_linear.sh` |
-| Figure 3: Effect of delayed learning on the temporal distribution of spending | `03_temporal_redistribution_low_linear.sh` |
-| Figure 4: Effect of delayed learning on sectoral allocation of abatement investment | `04_sectoral_response.sh`|
-| Figure 5: Effect of delayed learning on the carbon price | `05_carbon_price_response.sh` |
-| Figure SI 1: Effect of delayed learning on aggregate policy cost including direct air capture technologies | `si01_dac_effect_of_learning.sh` |
-| Figure SI 2: Impact of delayed learning on sectoral allocation of abatement investment when direct air capture technologies are present | `si02_dac_vs_no_dac_comp.sh` |
-| Figure SI 3: Effect of delayed learning on aggregate policy cost, growing emissions baseline | `si03_effect_of_learning_emis.sh` |
-| Figure SI 4: Effect of delayed learning on the temporal distribution of spending, growing emissions baseline | `si04_temporal_redistribution_emis.sh` |
-| Figure SI 5: Effect of delayed learning on aggregate policy cost, high-bound calibration | `si05_effect_of_learning_high_linear.sh` |
-| Figure SI 6: Effect of delayed learning on the temporal distribution of spending, high-bound calibration | `si06_temporal_redistribution_high_linear.sh` |
-| Figure SI 7: Effect of delayed learning on aggregate policy cost, nonlinear calibration | `si07_effect_of_learning_pow.sh` |
-| Figure SI 8: Effect of delayed learning on the temporal distribution of spending, nonlinear calibration | `si08_temporal_redistribution_pow.sh` |
-| Figure SI 9: Effect of delayed learning on aggregate policy cost, T*= 1.5 deg C | `si09_effect_of_learning_t15.sh` |
-| Figure SI 10: Effect of delayed learning on the temporal distribution of spending, T*=1.5 deg C | `si10_temporal_redistribution_t15.sh`|
+| Figure Desired | Code to Run | Notes|
+|----------|----------|----------|
+| Figure 1: Calibrating marginal abatement costs | `01_mac_calibration.sh` | - |
+| Figure 2: Effect of delayed learning on aggregate policy cost | `02_effect_of_learning_low_linear.sh` | - |
+| Figure 3: Effect of delayed learning on the temporal distribution of spending | `03_temporal_redistribution_low_linear.sh` | - |
+| Figure 4: Effect of delayed learning on sectoral allocation of abatement investment | `04_sectoral_response.sh`| - |
+| Figure 5: Effect of delayed learning on the carbon price | `05_carbon_price_response.sh` | - |
+| Figure SI 1: Effect of delayed learning on aggregate policy cost including direct air capture technologies | `si01_dac_effect_of_learning.sh` | - |
+| Figure SI 2: Impact of delayed learning on sectoral allocation of abatement investment when direct air capture technologies are present | `si02_dac_vs_no_dac_comp.sh` | - |
+| Figure SI 3: Effect of delayed learning on aggregate policy cost, growing emissions baseline | `si03_effect_of_learning_emis.sh` | - |
+| Figure SI 4: Effect of delayed learning on the temporal distribution of spending, growing emissions baseline | `si04_temporal_redistribution_emis.sh` | - |
+| Figure SI 5: Effect of delayed learning on aggregate policy cost, high-bound calibration | `si05_effect_of_learning_high_linear.sh` | - |
+| Figure SI 6: Effect of delayed learning on the temporal distribution of spending, high-bound calibration | `si06_temporal_redistribution_high_linear.sh` | - |
+| Figure SI 7: Effect of delayed learning on aggregate policy cost, nonlinear calibration | `si07_effect_of_learning_pow.sh` | This figure was verified virtually. See *Known issues* below. |
+| Figure SI 8: Effect of delayed learning on the temporal distribution of spending, nonlinear calibration | `si08_temporal_redistribution_pow.sh` | This figure was verified virtually. See *Known issues* below. |
+| Figure SI 9: Effect of delayed learning on aggregate policy cost, T*= 1.5 deg C | `si09_effect_of_learning_t15.sh` | - |
+| Figure SI 10: Effect of delayed learning on the temporal distribution of spending, T*=1.5 deg C | `si10_temporal_redistribution_t15.sh`| - |
 
 If you're an academic, you can email Gurobi customer support to get a free academic license. It's easy to install, and once it's installed, I believe you'll be good to go to run the codes.
 
@@ -53,5 +54,17 @@ python simulation_mains/invBase_cvxpy_main.py ar6_15 1 0
 
 **Note:** You should be operating in the Python environment provided at the head directory. Without it, I make no guarantees any of this will run on your machine (and even then, well, mileage may vary...).
 
-Last edited: 22 May, 2024.
+## Known issues
+
+The only figures that were not able to be reproduced on a member of the World Bank Group's Reproducibility team's computer were scripts `si07` and `si08`. These figures were verified virtually, with a team member joining via video call and watching the code run on the author's laptop.
+
+The hypothesized reason is that both `si07` and `si08` have highly convex objective functions, which requires more powerful hardware to solve precisely than what was available to the reproducibility team member. The team member got an `optimal_inaccurate` solution during optimization. The code will throw an error when anything other than an `optimal` solution is found. It was verified that the original author of the code gets an `optimal` solution when the `si07` and `si08` codes are run.
+
+If a user gets an `optimal_inaccurate` solution for either of these codes, one possible course of action is to edit the `scale` parameter found in the `codes/simulation_mains/invRec_RiskPrem_cvxpy_main.py` file. This can be found on lines 34 through 42. 
+
+---
+
+The hardware of the original author is a 2023 MacBook Pro with an M2 Pro Chip and 16 GB of RAM. 
+
+Last edited: 7 June, 2024.
 
