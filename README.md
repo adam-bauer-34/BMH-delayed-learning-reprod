@@ -1,5 +1,4 @@
-#
-Reproduction code package for "How delayed learning about climate uncertainty impacts decarbonization investment strategies"
+# Reproduction code package for "How delayed learning about climate uncertainty impacts decarbonization investment strategies"
 
 By: Adam Michael Bauer -- adammb4 [at] illinois [dot] edu
 
