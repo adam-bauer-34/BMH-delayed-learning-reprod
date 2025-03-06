@@ -133,6 +133,12 @@ class MACRecourseModel():
         print("Information revelation times (after the t=0): {} yrs.".format(self.rev_times))
         print("This is a {}-period optimization problem embedded in a base-{} path dependent tree structure.\n".format(self.N_periods, self.base))
 
+        # set scale factor for objective function
+        if cal == 'ar6pow_17':
+            self.scale = 30000. 
+        else:
+            self.scale = max(self.gbars.value)
+
     def _import_calibration(self):
         """Import calibration.
 
@@ -163,7 +169,7 @@ class MACRecourseModel():
         self.dt = cp.Parameter(nonneg=True,
                                value=df_glob['dt'].values[0]) # time discretization
         self.psi_0 = cp.Parameter(nonneg=True, 
-                                  value=df_glob['psi_0'].values[0]) # initial conditions for cumulative emissions
+                                  value=df_glob['psi_0'].values[0] / self.B.value) # initial conditions for cumulative emissions
         
         # parse sector-specific parameters
         self.sectors = df_secs.columns.values # sectors
@@ -171,7 +177,7 @@ class MACRecourseModel():
         self.abars = cp.Parameter(self.N_secs, nonneg=True, 
                                   value=df_secs.loc['abar'].values) # emissions rates by sector
         self.gbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                  value=df_secs.loc['gbar'].values/1e5) # marginal abatement cost
+                                  value=df_secs.loc['gbar'].values) # marginal abatement cost
         self.powers = df_secs.loc['power'].values # power for marginal abatement cost curves
 
         # parse recourse parameters
@@ -220,6 +226,11 @@ class MACRecourseModel():
         self.tree.initialize_tree_data(trunc_percentile=self.trunc_percentile)
         print("Done!")
 
+        # if we're doing the simple calibration, hardwire probabilities to be equal as opposed to Gaussian nodes
+        if self.cal == 'simp':
+            self.tree.full_probs[1] = [1.0/3.0] * 3
+            self.tree.full_data[1] = [self.B.value - 100, self.B.value, self.B.value + 100]
+
         if print_outcome:
             print("The tree data is: ")
             for per in self.tree.full_data.keys():
@@ -260,8 +271,10 @@ class MACRecourseModel():
         # make objective function
         self.obj = 0.0
         for per in range(self.N_periods):
-            tmp_obj = cp.sum([self.tree.full_probs[per][state] * self.betas[per]\
-                              @ cp.sum([self.gbars[i].value * (self.powers[i] + 1)**(-1) * self.a[per][state][i]**(self.powers[i] + 1) for i in range(self.N_secs)])\
+            tmp_obj = cp.sum([self.tree.full_probs[per][state] * self.betas[per]
+                              @ cp.sum([ (self.gbars[i].value / self.scale)
+                              * (self.powers[i] + 1)**(-1)
+                              * (self.abars.value[i] * self.a[per][state][i])**(self.powers[i] + 1) for i in range(self.N_secs)])\
                               for state in range(self.tree.N_nodes_per_period[per])])
             self.obj += tmp_obj
 
@@ -270,18 +283,16 @@ class MACRecourseModel():
         for per in range(self.N_periods):
             for state in range(self.tree.N_nodes_per_period[per]):
                 ## on abatement rate
-                self.constraints.extend([self.a[per][state][i, :] <= self.abars[i] for i in range(self.N_secs)])
+                self.constraints.extend([self.a[per][state][i, :] <= 1.0 for i in range(self.N_secs)])
 
-                ## irreversibility?
-                self.constraints.extend([self.a[per][state][i, :-1] <= self.a[per][state][i, 1:] for i in range(self.N_secs)])
-                
                 ## cap the cumulative emissions in each period
-                self.constraints.append(self.psi[per][state] <= self.tree.full_data[per][state])
+                self.constraints.append(self.psi[per][state] <= (self.tree.full_data[per][state] / self.B.value))
 
                 ## set non-initial cumulative emissions in each period
                 tmp_psi_vec = self._get_psi_vector(per, self.times[per], 
                                                    self.psi[per][state],
                                                    self.F_psi[per][state])
+                
                 self.constraints.append(self.psi[per][state][1:] == tmp_psi_vec)
                 
         ## on continuity between learning points in cumulative emissions
@@ -290,8 +301,7 @@ class MACRecourseModel():
         for per in range(self.N_periods - 1):
             for state in range(self.tree.N_nodes_per_period[per]):
                 self.constraints.extend([self.psi[per][state][-1] == self.psi[per+1][tmp_ind_1:tmp_ind_2][i][0] for i in range(len(self.psi[per+1][tmp_ind_1:tmp_ind_2]))])
-                for k in range(self.N_secs):
-                    self.constraints.extend([self.a[per][state][k, -1] <= self.a[per+1][tmp_ind_1:tmp_ind_2][i][k, 0] for i in range(len(self.psi[per+1][tmp_ind_1:tmp_ind_2]))])
+
                 tmp_ind_1 += self.tree.base
                 tmp_ind_2 += self.tree.base
             tmp_ind_1 = 0
@@ -375,7 +385,7 @@ class MACRecourseModel():
         """
 
         # emissions flux
-        flux = cp.sum(self.abars) * np.ones(len(times)) - cp.sum(a, axis=0)
+        flux = cp.sum([self.abars[i].value * (np.ones(len(times)) - a[i, :]) for i in range(len(self.sectors))]) / self.B.value
         return flux
 
     def solve_opt(self, save_output=True, verbose=True, 
@@ -425,13 +435,16 @@ class MACRecourseModel():
             print("MAC model finished with optimal status.")
         # else, print the outcome of the optimization
         else:
+            print("\n-------------------------------------\nMODEL OUTPUT\n-------------------------------------")
             print("Status: ", self.prob.status)
-            print("Total cost: ", self.prob.value)
+            print("Total cost: ", self.prob.value * self.scale)
             print("Path: ", self.a_proc)
             print("Cumulative emissions: ", self.psi_proc)
 
             # the SCC is the final condition value
             print("SCC: ", self.scc_proc)
+
+            print("Status: ", self.prob.status)
         
     def _process_opt_output(self, print_outcome=False):
         """Process model output.
@@ -446,8 +459,8 @@ class MACRecourseModel():
 
         # loop through periods and extract abatement and cumulative emissions
         for per in range(self.N_periods):
-            self.a_proc[per] = [self.a[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
-            self.psi_proc[per] = [self.psi[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
+            self.a_proc[per] = [self.abars.value[:, None] * self.a[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
+            self.psi_proc[per] = [self.B.value * self.psi[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
 
         # loop through constraints and extract carbon price
         # NOTE: the last N constraints are the carbon price constraints, ordered by period
@@ -457,7 +470,7 @@ class MACRecourseModel():
         for per in range(self.N_periods):
             scc_proc_tmp = []
             for state in range(self.tree.N_nodes_per_period[per]):
-                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * 1e5)
+                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * self.scale / self.B.value)
                 tmp_const_ind += 1
             self.scc_proc[per] = scc_proc_tmp
 
@@ -470,7 +483,7 @@ class MACRecourseModel():
             tmp_ds = xr.Dataset(data_vars={'abatement': (['state', 'sector', 'time'], self.a_proc[per]),
                         'cumulative_emissions': (['state', 'time_state'], self.psi_proc[per]),
                         'scc': (['state', 'time'], self.scc_proc[per]),
-                        'gbars': (['sector'], self.gbars.value * 1e5),
+                        'gbars': (['sector'], self.gbars.value),
                         'abars': (['sector'], self.abars.value),
                         'power': (['sector'], self.powers),
                         'B_tree': (['state'], self.tree.full_data[per]),
@@ -484,7 +497,7 @@ class MACRecourseModel():
         # make DataTree object with parent coordinate named 'period'
         self.data_tree = DataTree.from_dict(datatree_dict, 'period')
 
-        self.data_tree['0'].attrs = {'total_cost': self.prob.value*1e5,
+        self.data_tree['0'].attrs = {'total_cost': self.prob.value * self.scale,
                     'r': self.r.value,
                     'beta':self.beta.value,
                     'dt': self.dt.value,
@@ -514,45 +527,3 @@ class MACRecourseModel():
         path = ''.join([cwd, '/data/output/', self.cal, '_', self.rec_cal, '_', self.method, '_macrec_output.nc'])
         self.data_tree.to_netcdf(filepath=path, mode='w', format='NETCDF4', engine='netcdf4')
         print("\nData successfully saved to file:\n{}".format(path))
-
-    def calc_risk_premium(self):
-        """Compute the risk premium of the recourse policy over the no uncertainty model.
-
-        Risk premium is defined as: (t=0 cost of recourse model policy) - (t=0 cost of no uncertainty model policy)
-
-        Returns
-        -------
-        risk_premium: float
-            the risk premium of the recourse policy
-        """
-
-        # try to import a no uncertainty version with the same calibration; if one does not exist,
-        # make one and solve it
-        cwd = os.getcwd()
-        no_unc_path = ''.join([cwd, '/data/output/', self.cal, "_mac_output.nc"])
-        
-        # try to open no uncertainty model results
-        try:
-            ds_no_unc = xr.open_dataset(no_unc_path)
-
-        # if they don't exist, make your own
-        except FileNotFoundError:
-            m_no_unc = MACBaseModel(self.cal)
-            m_no_unc.solve_opt(save_output=True)
-            ds_no_unc = xr.open_dataset(no_unc_path)
-
-        # find total costs for the policy
-        total_cost_no_unc = (0.5 * ds_no_unc.gbars * ds_no_unc.abatement**2).sum('sector')
-        
-        # extract only the t = 0 cost
-        t0_total_cost_no_unc = total_cost_no_unc.values[0]
-
-        # find total costs (in first period, at least) of the recourse policy
-        total_cost_rec = 0.5 * self.gbars.value @ self.a_proc[0][0]**2
-
-        # extract only the t = 0 cost
-        t0_total_cost_rec = total_cost_rec[0]
-
-        # risk premium is the difference between the no uncertainty case and the recourse case
-        risk_premium = (t0_total_cost_rec - t0_total_cost_no_unc)/(t0_total_cost_no_unc)
-        return risk_premium * 100

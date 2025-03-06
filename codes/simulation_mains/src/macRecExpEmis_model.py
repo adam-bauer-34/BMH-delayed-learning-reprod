@@ -265,9 +265,6 @@ class MACRecourseModelExpEmis():
                 ## on abatement rate
                 self.constraints.extend([self.a[per][state][i, :] <= self.abars[per][i] for i in range(self.N_secs)])
 
-                ## irreversibility?
-                self.constraints.extend([self.a[per][state][i, :-1] <= self.a[per][state][i, 1:] for i in range(self.N_secs)])
-                
                 ## cap the cumulative emissions in each period
                 self.constraints.append(self.psi[per][state] <= self.B_dist[state])
 
@@ -275,6 +272,7 @@ class MACRecourseModelExpEmis():
                 tmp_psi_vec = self._get_psi_vector(per, self.times[per], 
                                                    self.psi[per][state],
                                                    self.F_psi[per][state])
+                
                 self.constraints.append(self.psi[per][state][1:] == tmp_psi_vec)
 
         ## on the emissions flux (done last to make the scc more easily accessible later)

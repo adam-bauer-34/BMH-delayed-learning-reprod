@@ -6,6 +6,6 @@ echo 'WARNING: This one might take a while, since we have to draw 500 samples fr
 
 python simulation_mains/invRec_RiskPremShort_cvxpy_main.py ar6_17 N1_T40_B500 500 2 1
 
-echo 'Making Figure 5...'
+echo 'Making Figure 6...'
 
 python figure_mains/carbon_price_impact.py

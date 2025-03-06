@@ -194,7 +194,6 @@ class MACBaseModelEmis():
         
         # make list of constraints
         self.constraints = [self.a[i] <= self.abars[i] for i in range(self.N_secs)]
-        #self.constraints.extend([self.a[i, -1] == max(self.abars[i].value) for i in range(self.N_secs)]) # must reach net zero by end? 
         self.constraints.append(self.psi_vec <= self.B)
         self.constraints.append(self.F_psi == self.flux_rhs_v)
 

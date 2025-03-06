@@ -30,7 +30,8 @@ def get_rec_t_dep_obj(dt_rec, pers):
             discount = disc**(tmp_ds.time.values)
             avg_inv = (tmp_ds.investment * tmp_ds.B_probs).sum('state')
             avg_a = (tmp_ds.abatement * tmp_ds.B_probs).sum('state').values
-            obj = np.array([(tmp_ds.power.values[i]+1)**(-1) * tmp_ds.cbars.values[i] * avg_inv[i].values**(tmp_ds.power.values[i]+1) for i in range(N_secs)])
+            obj = np.array([(tmp_ds.power.values[i]+1)**(-1) * tmp_ds.cbars.values[i]
+                            * avg_inv[i].values**(tmp_ds.power.values[i]+1) for i in range(N_secs)])
             a = avg_a
             
         else:
@@ -42,7 +43,8 @@ def get_rec_t_dep_obj(dt_rec, pers):
                 discount = disc**(tmp_ds.time.values)
                 avg_inv = (tmp_ds.investment * tmp_ds.B_probs).sum('state')
                 avg_a = (tmp_ds.abatement * tmp_ds.B_probs).sum('state')
-                obj = np.array([(tmp_ds.power.values[i]+1)**(-1) * tmp_ds.cbars.values[i] * avg_inv[i].values**(tmp_ds.power.values[i]+1) for i in range(N_secs)])
+                obj = np.array([(tmp_ds.power.values[i]+1)**(-1) * tmp_ds.cbars.values[i]
+                                * avg_inv[i].values**(tmp_ds.power.values[i]+1) for i in range(N_secs)])
                 tmp_objs.append(obj)
                 tmp_as.append(avg_a.values)
             obj = np.hstack([tmp_objs[0], tmp_objs[1]])
@@ -91,7 +93,7 @@ for j in range(7):
     for i in range(len(pers)):
         colorVal = scalarMap.to_rgba(pers[i]+ti)
         ax[sec_x[j], sec_y[j]].plot(time, cstars[i,j], color=colorVal, linestyle='solid')
-        ax[sec_x[j], sec_y[j]].set_xlim((2020,2100))
+        # ax[sec_x[j], sec_y[j]].set_xlim((2020,2150))
         ax[sec_x[j], sec_y[j]].set_title(sec[j])
         
         if sec_y[j] == 0:
@@ -126,6 +128,8 @@ no_xs = [0,0,0]
 no_ys = [0,1,2]
 for i in range(len(no_xs)):
     ax[no_xs[i], no_ys[i]].tick_params(axis='x', labelcolor='white')
+
+# ax[0, 1].set_ylim((0, 375))
 
 fig.savefig(basefile + 'ar6-sec-inv-eff-lt-t17.png', dpi=400, bbox_inches='tight')
 

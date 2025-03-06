@@ -258,9 +258,6 @@ class MACRecourseModelExp():
                 ## on abatement rate
                 self.constraints.extend([self.a[per][state][i, :] <= self.abars[i] for i in range(self.N_secs)])
 
-                ## irreversibility?
-                self.constraints.extend([self.a[per][state][i, :-1] <= self.a[per][state][i, 1:] for i in range(self.N_secs)])
-                
                 ## cap the cumulative emissions in each period
                 self.constraints.append(self.psi[per][state] <= self.B_dist[state])
 

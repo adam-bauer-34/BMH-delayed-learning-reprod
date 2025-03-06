@@ -97,9 +97,8 @@ class MACBaseModel():
         generate the vector of cumulative emissions for t>0
     """
 
-    def __init__(self, cal, scale=1e4):
+    def __init__(self, cal):
         self.cal = cal # calibration name
-        self.scale = scale # scaling for objective function
 
         # if the calibration name is not a string, throw an error
         if not isinstance(self.cal, str):
@@ -147,7 +146,7 @@ class MACBaseModel():
         self.times = np.arange(0.0, self.T.value, self.dt.value) # times we're solving the optimization problem at
         self.betas = self.beta.value**self.times # vector of discount factors
         self.psi_0 = cp.Parameter(nonneg=True, 
-                                  value=df_glob['psi_0'].values[0]) # initial conditions for cumulative emissions
+                                  value=df_glob['psi_0'].values[0] / self.B.value) # initial conditions for cumulative emissions, scaled by B
         
         # parse sector-specific parameters
         self.sectors = df_secs.columns.values # sectors
@@ -155,8 +154,9 @@ class MACBaseModel():
         self.abars = cp.Parameter(self.N_secs, nonneg=True, 
                                   value=df_secs.loc['abar'].values) # emissions rates by sector
         self.gbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                  value=df_secs.loc['gbar'].values/self.scale) # marginal abatement cost
+                                  value=df_secs.loc['gbar'].values) # marginal abatement cost
         self.powers = df_secs.loc['power'].values # power for marginal abatement cost curves
+
 
     def solve_opt(self, save_output=True, verbose=True, cal_purposes=False):
         """Solve optimization problem with `cvxpy`.
@@ -183,12 +183,14 @@ class MACBaseModel():
         self.flux_rhs_v = self._get_flux_rhs()
         
         # make list of constraints
-        self.constraints = [self.a[i,:] <= self.abars[i] for i in range(self.N_secs)]
-        self.constraints.append(self.psi_vec <= self.B)
+        self.constraints = [self.a[i, :] <= 1.0 for i in range(self.N_secs)]
+        self.constraints.append(self.psi_vec <= 1.0)
         self.constraints.append(self.F_psi == self.flux_rhs_v)
 
         # define and solve problem
-        obj_term = cp.sum([self.gbars[i].value * (self.powers[i] + 1)**(-1) * self.a[i]**(self.powers[i] + 1) for i in range(self.N_secs)])
+        self.scale = max(self.gbars.value)  # set optimization scaling
+        obj_term = cp.sum([(self.gbars[i].value / self.scale)
+                            * (self.powers[i] + 1)**(-1) * (self.abars.value[i] * self.a[i])**(self.powers[i] + 1) for i in range(self.N_secs)])
         self.prob = cp.Problem(cp.Minimize(self.betas @ obj_term), self.constraints)
         self.prob.solve(solver=cp.GUROBI, verbose=verbose)
 
@@ -201,25 +203,29 @@ class MACBaseModel():
         
         elif cal_purposes and self.prob.status=='optimal':
             print("MAC model finished with optimal status.")
+            self.opt_value_cal = self.prob.value * self.scale  # set to correct value without scaling, because the INV model will have a different one
 
         # else, print the outcome of the optimization
         else:
+            print("\n-------------------------------------\nMODEL OUTPUT\n-------------------------------------")
             print("Status: ", self.prob.status)
-            print("Total cost: ", self.prob.value)
-            print("Path: ", self.a.value)
+            print("Total cost: ", self.prob.value * self.scale)
             print("Cumulative emissions: ", self.psi_vec.value)
 
+            for sec in range(self.N_secs):
+                print("{} abatement path:\n{}".format(self.sectors[sec], self.a.value[sec] * self.abars.value[sec]))
+
             # the SCC is the final condition value
-            print("SCC: ", self.constraints[-1].dual_value[0] * self.scale)
+            print("SCC: ", self.constraints[-1].dual_value[0] * self.scale / self.B.value)
         
     def _save_output(self):
         """Save output of optimization to netCDF file.
         """
 
         # make xarray dataset object
-        ds = xr.Dataset(data_vars={'abatement': (['sector', 'time'], self.a.value),
-                        'cumulative_emissions': (['time'], self.psi_vec.value),
-                        'scc': (['time'], self.constraints[-1].dual_value * self.scale),
+        ds = xr.Dataset(data_vars={'abatement': (['sector', 'time'], self.abars.value[:, None] * self.a.value),
+                        'cumulative_emissions': (['time'], self.psi_vec.value * self.B.value),
+                        'scc': (['time'], self.constraints[-1].dual_value * self.scale / self.B.value),
                         'gbars': (['sector'], self.gbars.value),
                         'abars': (['sector'], self.abars.value),
                         'power': (['sector'], self.powers)},
@@ -265,5 +271,5 @@ class MACBaseModel():
         """
 
         # emissions flux
-        flux = cp.sum(self.abars) * np.ones(len(self.times)) - cp.sum(self.a, axis=0)
+        flux = cp.sum([self.abars[i].value * (np.ones(len(self.times)) - self.a[i, :]) for i in range(len(self.sectors))]) / self.B.value
         return flux
