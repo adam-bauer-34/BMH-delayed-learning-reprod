@@ -17,6 +17,7 @@ rec_cal = sys.argv[2]
 solve_model = int(sys.argv[3])
 save_output = int(sys.argv[4])
 
+# initialize the model
 m = INVRecourseModel(cal, rec_cal)
 
 # initialize tree structure

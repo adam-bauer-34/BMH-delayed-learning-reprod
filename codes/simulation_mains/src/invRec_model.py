@@ -17,6 +17,7 @@ from datatree import DataTree
 from .tree import TreePathDep
 from .invBase_model import INVBaseModel
 
+
 class INVRecourseModel():
     """Abatement investment model class with recourse.
 
@@ -128,10 +129,20 @@ class INVRecourseModel():
         generate capital depreciations for abatement investment for t < T
     """
 
-    def __init__(self, cal, rec_cal, scale=1e5):
+    def __init__(self, cal, rec_cal, scale=None):
         self.cal = cal # calibration name
         self.rec_cal = rec_cal # recourse calibration name
-        self.scale = scale # scaling for obj function
+        
+        if scale != None:
+            self.scale = scale  # model scaling for those that need it 
+
+        # set scale factor for objective function in simplified simulations 
+        elif self.cal == 'simp':
+            self.scale = self.cbars[0].value / 5.
+
+        # set scaling that generally works
+        else:
+            self.scale = 27000. 
 
         # if the calibration name is not a string, throw an error
         if not isinstance(self.cal, str) and not isinstance(self.rec_cal, str):
@@ -185,7 +196,7 @@ class INVRecourseModel():
         self.dt = cp.Parameter(nonneg=True,
                                value=df_glob['dt'].values[0]) # time discretization
         self.psi_0 = cp.Parameter(nonneg=True, 
-                                  value=df_glob['psi_0'].values[0]) # initial conditions for cumulative emissions
+                                  value=df_glob['psi_0'].values[0]/self.B.value) # initial conditions for cumulative emissions
         
         # parse sector-specific parameters
         self.sectors = df_secs.columns.values # sectors
@@ -195,7 +206,7 @@ class INVRecourseModel():
         self.deltas = cp.Parameter(self.N_secs, nonneg=True, 
                                    value=df_secs.loc['delta'].values) # capital depreciations rate in each sector
         self.a_0s = cp.Parameter(self.N_secs, nonneg=True, 
-                                 value=df_secs.loc['a_0'].values) # initial amount of abatement in each sector
+                                 value=df_secs.loc['a_0'].values/self.abars.value) # initial amount of abatement in each sector
         
         # NOTE: gbars is not a `cvxpy` parameter since we don't use it in the optimization in INV model
         self.gbars = df_secs.loc['gbar'].values # marginal abatement cost
@@ -205,7 +216,7 @@ class INVRecourseModel():
         # NOTE: the KeyError comes from the fact that df_secs.loc['cbar'] has no entries
         try:
             self.cbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                      value=df_secs.loc['cbar'].values/self.scale)
+                                      value=df_secs.loc['cbar'].values)
 
         except KeyError:
             # make relative costs for calibration
@@ -276,6 +287,11 @@ class INVRecourseModel():
         self.tree.initialize_tree_data(trunc_percentile=self.trunc_percentile)
         print("Done!")
 
+        # if we're doing the simple calibration, hardwire probabilities to be equal as opposed to Gaussian nodes
+        if self.cal == 'simp':
+            self.tree.full_probs[1] = [1.0/3.0] * 3
+            self.tree.full_data[1] = [self.B.value - 100, self.B.value, self.B.value + 100]
+
         if print_outcome:
             print("The tree data is: ")
             for per in self.tree.full_data.keys():
@@ -319,7 +335,9 @@ class INVRecourseModel():
         self.obj = 0.0
         for per in range(self.N_periods):
             tmp_obj = cp.sum([self.tree.full_probs[per][state] * self.betas[per]\
-                              @ cp.sum([self.cbars[i].value * (self.powers[i] + 1)**(-1) * self.x[per][state][i]**(self.powers[i] + 1) for i in range(self.N_secs)])\
+                              @ cp.sum([ (self.cbars[i].value / self.scale)
+                              * (self.powers[i] + 1)**(-1)
+                              * (self.abars.value[i] * self.x[per][state][i])**(self.powers[i] + 1) for i in range(self.N_secs)])\
                               for state in range(self.tree.N_nodes_per_period[per])])
             self.obj += tmp_obj
 
@@ -346,13 +364,13 @@ class INVRecourseModel():
         for per in range(self.N_periods):
             for state in range(self.tree.N_nodes_per_period[per]):
                 ## cap on abatement
-                self.constraints.extend([self.a[per][state][i, :] <= self.abars[i] for i in range(self.N_secs)])
+                self.constraints.extend([self.a[per][state][i, :] <= 1.0 for i in range(self.N_secs)])
 
                 ## irreversibility of capital stocks 
                 self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
                 
                 ## cap the cumulative emissions in each period
-                self.constraints.append(self.psi[per][state] <= self.tree.full_data[per][state])
+                self.constraints.append(self.psi[per][state] <= (self.tree.full_data[per][state] / self.B.value))
 
                 ## set non-initial cumulative emissions in each period
                 tmp_psi_vec = self._get_psi_vector(per, self.times[per], 
@@ -373,7 +391,7 @@ class INVRecourseModel():
         ## on the emissions flux (done last to make the scc more easily accessible later)
         for per in range(self.N_periods):
             for state in range(self.tree.N_nodes_per_period[per]):
-                tmp_flux_vec = self._get_flux_rhs(self.times[per], self.a[per][state])
+                tmp_flux_vec = self._get_flux_rhs(self.times[per], self.a[per][state], self.B.value)
                 self.constraints.append(self.F_psi[per][state] == tmp_flux_vec)
 
         # define problem
@@ -427,7 +445,7 @@ class INVRecourseModel():
         # return equation of motion
         return psi_init_piece + self.dt.value * flux_piece
     
-    def _get_flux_rhs(self, times, a):
+    def _get_flux_rhs(self, times, a, B):
         """Get the emissions flux. 
 
         Necessary to get SCC from optimizer. 
@@ -441,6 +459,9 @@ class INVRecourseModel():
         a: cp.Variable with shape (N_secs, len(times))
             the abatement in this period
 
+        B: float
+            carbon budget to normalize by
+
         Returns
         -------
         flux: cp.Variable with shape len(times)
@@ -448,7 +469,7 @@ class INVRecourseModel():
         """
 
         # emissions flux
-        flux = cp.sum(self.abars) * np.ones(len(times)) - cp.sum(a[:, :-1], axis=0)
+        flux = cp.sum([self.abars[i].value * (np.ones(len(times)) - a[i, :-1]) for i in range(len(self.sectors))]) / B
         return flux
 
     def _get_abatement_vector(self, period, sec, times, t_f_last_per, a_it, delta, x_it):
@@ -548,10 +569,10 @@ class INVRecourseModel():
 
         # solve problem
         if suppress_prints:
-            self.prob.solve(solver=cp.GUROBI, verbose=False)
+            self.prob.solve(solver=cp.GUROBI, verbose=False, kwargs={'BarConvTol': 1e-2})
 
         else:
-            self.prob.solve(solver=cp.GUROBI, verbose=verbose)
+            self.prob.solve(solver=cp.GUROBI, verbose=verbose, kwargs={'BarConvTol': 1e-2})
 
         # get statistics from solver 
         self.solve_stats = self.prob.solver_stats
@@ -560,6 +581,11 @@ class INVRecourseModel():
 
         # if we save the output, save it (so long as the optimizer returned the optimal result)
         if save_output and self.prob.status == 'optimal':
+            self._save_output()
+
+        # if we save the output, save it (so long as the optimizer returned the optimal result)
+        if save_output and self.prob.status == 'optimal_inaccurate':
+            print("WARNING: Solution is optimal_inaccurate. This is usually OK, but double-check results to make sure there are no numerical artifacts in the solution.")
             self._save_output()
         
         elif cal_purposes and self.prob.status=='optimal':
@@ -572,18 +598,18 @@ class INVRecourseModel():
         else:
             print("\n---------------\nGLOBAL OUTCOME\n---------------\n")
             print("Status: ", self.prob.status)
-            print("Total cost: ", self.prob.value)
+            print("Total cost: ", self.prob.value * self.scale)
             print("\n---------------\nRESULTS FOR DECISION AND STATE VARIABLES\n---------------\n")
             for sec in range(self.N_secs):
                 print("\n---------------\nSECTOR: {}.\n---------------\n".format(self.sectors[sec]))
                 for per in range(self.N_periods):
                     for state in range(self.tree.N_nodes_per_period[per]):
                         print("Period {} investment path(s): ".format(per), self.x_proc[per][state][sec])
-                        print("Period {} abatement path(s): ".format(per), self.a_proc[per][state][sec], '\n')
+
             print("\n---------------\nAGGREGATE QUANTITIES (NON-SECTOR SPECIFIC)\n---------------\n")
             for per in range(self.N_periods):
                 for state in range(self.tree.N_nodes_per_period[per]):
-                    print("Period {} cumulative emissions path(s): ".format(per), self.psi_proc[per][state])
+                    print("Period {} cumulative emissions path(s): ".format(per), self.psi[per][state].value)
 
                     # the SCC is the final condition value
                     print("Period {} carbon price: ".format(per), self.scc_proc[per][state], '\n')
@@ -604,9 +630,9 @@ class INVRecourseModel():
 
         # loop through periods and extract abatement and cumulative emissions
         for per in range(self.N_periods):
-            self.x_proc[per] = [self.x[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
-            self.a_proc[per] = [self.a[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
-            self.psi_proc[per] = [self.psi[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
+            self.x_proc[per] = [self.abars.value[:, None] * self.x[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
+            self.a_proc[per] = [self.abars.value[:, None] * self.a[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
+            self.psi_proc[per] = [self.B.value * self.psi[per][state].value for state in range(self.tree.N_nodes_per_period[per])]
 
         # loop through constraints and extract carbon price
         # NOTE: the last N constraints are the carbon price constraints, ordered by period
@@ -616,7 +642,8 @@ class INVRecourseModel():
         for per in range(self.N_periods):
             scc_proc_tmp = []
             for state in range(self.tree.N_nodes_per_period[per]):
-                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * self.scale)
+                scc_proc_tmp.append(-1 * self.constraints[tmp_const_ind].dual_value * self.scale
+                                    / self.B.value)
                 tmp_const_ind += 1
             self.scc_proc[per] = scc_proc_tmp
 
@@ -630,7 +657,7 @@ class INVRecourseModel():
                         'abatement': (['state', 'sector', 'time_state'], self.a_proc[per]),
                         'cumulative_emissions': (['state', 'time_state'], self.psi_proc[per]),
                         'scc': (['state', 'time'], self.scc_proc[per]),
-                        'cbars': (['sector'], self.cbars.value * self.scale),
+                        'cbars': (['sector'], self.cbars.value),
                         'abars': (['sector'], self.abars.value),
                         'deltas': (['sector'], self.deltas.value),
                         'a_0s': (['sector'], self.a_0s.value),
@@ -657,6 +684,7 @@ class INVRecourseModel():
                          'status': self.prob.status,
                          'solve_time': self.solve_stats.solve_time,
                          'method': self.method,
+                         'scale': self.scale,
                          'notes': "These are global simulation attributes, but owing to a limitation of the `datatree` package, they're stored under the first period."}
         
         print("Done!")
@@ -678,45 +706,3 @@ class INVRecourseModel():
         path = ''.join([cwd, '/data/output/', self.cal, '_', self.rec_cal, '_', self.method,'_invrec_output.nc'])
         self.data_tree.to_netcdf(filepath=path, mode='w', format='NETCDF4', engine='netcdf4')
         print("\nData successfully saved to file:\n{}".format(path))
-
-    def calc_risk_premium(self):
-        """Compute the risk premium of the recourse policy over the no uncertainty model.
-
-        Risk premium is defined as: (t=0 cost of recourse model policy) - (t=0 cost of no uncertainty model policy)
-
-        Returns
-        -------
-        risk_premium: float
-            the risk premium of the recourse policy
-        """
-
-        # try to import a no uncertainty version with the same calibration; if one does not exist,
-        # make one and solve it
-        cwd = os.getcwd()
-        no_unc_path = ''.join([cwd, '/data/output/', self.cal, "_inv_output.nc"])
-        
-        # try to open no uncertainty model results
-        try:
-            ds_no_unc = xr.open_dataset(no_unc_path)
-
-        # if they don't exist, make your own
-        except FileNotFoundError:
-            m_no_unc = INVBaseModel(self.cal)
-            m_no_unc.solve_opt(save_output=True)
-            ds_no_unc = xr.open_dataset(no_unc_path)
-
-        # find total costs for the policy
-        total_cost_no_unc = (0.5 * ds_no_unc.cbars * ds_no_unc.investment**2).sum('sector')
-        
-        # extract only the t = 0 cost
-        t0_total_cost_no_unc = total_cost_no_unc.values[0]
-
-        # find total costs (in first period, at least) of the recourse policy
-        total_cost_rec = 0.5 * self.cbars.value @ self.x_proc[0][0]**2
-
-        # extract only the t = 0 cost
-        t0_total_cost_rec = total_cost_rec[0]
-
-        # risk premium is the difference between the no uncertainty case and the recourse case
-        risk_premium = (t0_total_cost_rec - t0_total_cost_no_unc)/(t0_total_cost_no_unc)
-        return risk_premium * 100

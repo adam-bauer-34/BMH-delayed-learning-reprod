@@ -179,7 +179,7 @@ class INVBaseModel():
         self.times = np.arange(0.0, self.T.value, self.dt.value) # times we're solving the optimization problem at
         self.betas = self.beta.value**self.times # vector of discount factors
         self.psi_0 = cp.Parameter(nonneg=True, 
-                                  value=df_glob['psi_0'].values[0]) # initial conditions for cumulative emissions
+                                  value=df_glob['psi_0'].values[0]/self.B.value) # initial conditions for cumulative emissions
         
         # parse sector-specific parameters
         self.sectors = df_secs.columns.values # sectors
@@ -198,7 +198,7 @@ class INVBaseModel():
         # NOTE: the KeyError comes from the fact that df_secs.loc['cbar'] has no entries
         try:
             self.cbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                      value=df_secs.loc['cbar'].values/1000.)
+                                      value=df_secs.loc['cbar'].values)
 
         except KeyError:
             # make relative costs for calibration
@@ -224,7 +224,7 @@ class INVBaseModel():
         m.solve_opt(save_output=False, verbose=False, cal_purposes=True)
 
         # total costs for MAC model
-        mac_total_cost = m.prob.value
+        mac_total_cost = m.opt_value_cal
 
         print("Now we're calibrating the INV model...")
         # now find cbars such that the total cost is equal for inv and mac models
@@ -236,10 +236,10 @@ class INVBaseModel():
         print("The optimal cost parameters are:")
         print(''.join(["SECTOR: {}.    COST COEFFICIENT: {}.\n".format(i,j) for i,j in zip(self.sectors, cbars)]))
         
-        self.cbars = cp.Parameter(self.N_secs, nonneg=True, value=cbars/1000.) # abatement investment cost by sector
+        self.cbars = cp.Parameter(self.N_secs, nonneg=True, value=cbars) # abatement investment cost by sector
 
         if save_cal:
-            df = pd.DataFrame([self.gbars, self.abars.value, self.deltas.value, self.a_0s.value, self.powers, self.cbars.value * 1000.],
+            df = pd.DataFrame([self.gbars, self.abars.value, self.deltas.value, self.a_0s.value, self.powers, self.cbars.value],
                               index=['gbar', 'abar', 'delta', 'a_0', 'power', 'cbar'], 
                               columns=self.sectors)
 
@@ -266,13 +266,17 @@ class INVBaseModel():
             difference between INV policy with ci and MAC model
         """
 
+        # temporary cbar values
         tmp_cbars = ci * self.rel_costs
 
-        self.cbars = cp.Parameter(self.N_secs, nonneg=True, value=tmp_cbars / 1000.)
+        # set them as optimization variable
+        self.cbars = cp.Parameter(self.N_secs, nonneg=True, value=tmp_cbars)
 
+        # solve optimization with this set of cbars
         self.solve_opt(save_output=False, verbose=False, cal_purposes=True)
 
-        diff = mac_total_cost - self.prob.value * 1000.
+        # compute difference between total cost in MAC and above model run
+        diff = mac_total_cost - self.opt_value_cal
 
         return diff
 
@@ -319,19 +323,22 @@ class INVBaseModel():
         ## on cumulative emissions
         self.constraints.append(self.psi[0] == self.psi_0) # initial condition
         self.constraints.append(self.psi[1:] == self.psi_vec) # rest equal to flux
-        self.constraints.append(self.psi <= self.B) # capped at RCB
+        self.constraints.append(self.psi <= 1.0) # capped at RCB
 
         ## on abatement
         self.constraints.append(self.a[:, 0] == self.a_0s) # initial a is the IC
         self.constraints.extend([self.x[i, :] - self.deltas[i] * self.a[i, :-1] >= 0 for i in range(self.N_secs)]) # irreversibility constraints
         self.constraints.extend([self.a[i, 1:] == self.a_vecs[i] for i in range(self.N_secs)]) # rest of values equal to fluxes
-        self.constraints.extend([self.a[i,:] <= self.abars[i] for i in range(self.N_secs)]) # cap abatement at emissions rate
+        self.constraints.extend([self.a[i,:] <= 1.0 for i in range(self.N_secs)]) # cap abatement at emissions rate
 
         ## on flux
         self.constraints.append(self.F_psi == self.flux_rhs_v) # flux equality for SCC
 
         # define and solve problem
-        obj_term = cp.sum([self.cbars[i].value * (self.powers[i] + 1)**(-1) * self.x[i]**(self.powers[i] + 1) for i in range(self.N_secs)])
+        self.scale = max(self.cbars.value)  # scale down objective so we can solve the model
+        obj_term = cp.sum([(self.cbars[i].value / self.scale)
+                            * (self.powers[i] + 1)**(-1) 
+                            * (self.abars.value[i] * self.x[i])**(self.powers[i] + 1) for i in range(self.N_secs)])
         self.prob = cp.Problem(cp.Minimize(self.betas @ obj_term), self.constraints)
         self.prob.solve(solver=cp.GUROBI, verbose=verbose)
 
@@ -345,28 +352,34 @@ class INVBaseModel():
         # if solving for calibration purposes, just confirm that we exited with optimal status
         elif cal_purposes and self.prob.status == 'optimal':
             print("INV model finished with optimal status.")
+            self.opt_value_cal = self.prob.value * self.scale
+
+        elif self.prob.status == "optimal_inaccurate":
+            print("Model finished inaccurately. Dumping results.")
 
         # else, print the outcome of the optimization
         else:
             print("Status: ", self.prob.status)
-            print("Total cost: ", self.prob.value)
-            print("Investment path: ", self.x.value)
-            print("Abatemnet: ", self.a.value)
+            print("Total cost: ", self.prob.value * self.scale)
             print("Cumulative emissions: ", self.psi.value)
+            
+            #for sec in range(self.N_secs):
+            #    print("{} investment path:\n{}".format(self.sectors[sec], self.x.value[sec] * self.abars.value[sec]))
+            #    print("{} abatement path:\n{}".format(self.sectors[sec], self.a.value[sec] * self.abars.value[sec]))
 
             # the SCC is the final condition value
-            print("Time zero SCC: ", -1*self.constraints[-1].dual_value[0] * 1000.)
+            print("Time zero SCC: ", -1*self.constraints[-1].dual_value[0] * self.scale / self.B.value)
         
     def _save_output(self):
         """Save output of optimization to netCDF file.
         """
 
         # make xarray dataset object
-        ds = xr.Dataset(data_vars={'investment': (['sector', 'time'], self.x.value),
-                        'abatement': (['sector', 'time_state'], self.a.value),
-                        'cumulative_emissions': (['time_state'], self.psi.value),
-                        'scc': (['time'], self.constraints[-1].dual_value),
-                        'cbars': (['sector'], self.cbars.value * 1000.),
+        ds = xr.Dataset(data_vars={'investment': (['sector', 'time'], self.abars.value[:, None] * self.x.value),
+                        'abatement': (['sector', 'time_state'],  self.abars.value[:, None] * self.a.value),
+                        'cumulative_emissions': (['time_state'], self.psi.value * self.B.value),
+                        'scc': (['time'], self.constraints[-1].dual_value * self.scale / self.B.value),
+                        'cbars': (['sector'], self.cbars.value),
                         'abars': (['sector'], self.abars.value),
                         'deltas': (['sector'], self.deltas.value),
                         'a_0s': (['sector'], self.a_0s.value),
@@ -374,7 +387,7 @@ class INVBaseModel():
                 coords={'time': (['time'], self.times),
                         'time_state': (['time_state'], np.hstack([self.times, 1e10])),
                         'sector': (['sector'], self.sectors)},
-                attrs={'total_cost': self.prob.value * 1000.,
+                attrs={'total_cost': self.prob.value * self.scale,
                        'r': self.r.value,
                        'beta':self.beta.value,
                        'dt': self.dt.value,
@@ -427,7 +440,8 @@ class INVBaseModel():
 
         # emissions flux
         # NOTE: only use abatements for t < T for flux 
-        flux = cp.sum(self.abars) * np.ones(len(self.times)) - cp.sum(self.a[:, :-1], axis=0)
+        flux = cp.sum([self.abars[i].value * (np.ones(len(self.times)) - self.a[i, :-1]) for i in range(len(self.sectors))]) / self.B.value
+        # flux = cp.sum(self.abars) * np.ones(len(self.times)) - cp.sum(self.a[:, :-1], axis=0)
         return flux
 
     def _get_abatement_vector(self, a_0, delta, x_it):

@@ -280,9 +280,6 @@ class MACRecourseModelEmis():
                 ## on abatement rate
                 self.constraints.extend([self.a[per][state][i, :] <= self.abars[per][i] for i in range(self.N_secs)])
 
-                ## irreversibility?
-                self.constraints.extend([self.a[per][state][i, :-1] <= self.a[per][state][i, 1:] for i in range(self.N_secs)])
-                
                 ## cap the cumulative emissions in each period
                 self.constraints.append(self.psi[per][state] <= self.tree.full_data[per][state])
 
@@ -298,10 +295,10 @@ class MACRecourseModelEmis():
         for per in range(self.N_periods - 1):
             for state in range(self.tree.N_nodes_per_period[per]):
                 self.constraints.extend([self.psi[per][state][-1] == self.psi[per+1][tmp_ind_1:tmp_ind_2][i][0] for i in range(len(self.psi[per+1][tmp_ind_1:tmp_ind_2]))])
-                for k in range(self.N_secs):
-                    self.constraints.extend([self.a[per][state][k, -1] <= self.a[per+1][tmp_ind_1:tmp_ind_2][i][k, 0] for i in range(len(self.psi[per+1][tmp_ind_1:tmp_ind_2]))])
+
                 tmp_ind_1 += self.tree.base
                 tmp_ind_2 += self.tree.base
+                
             tmp_ind_1 = 0
             tmp_ind_2 = self.tree.base
 
@@ -494,7 +491,7 @@ class MACRecourseModelEmis():
         # make DataTree object with parent coordinate named 'period'
         self.data_tree = DataTree.from_dict(datatree_dict, 'period')
 
-        self.data_tree['0'].attrs = {'total_cost': self.prob.value*self.scale,
+        self.data_tree['0'].attrs = {'total_cost': self.prob.value * self.scale,
                     'r': self.r.value,
                     'beta':self.beta.value,
                     'dt': self.dt.value,

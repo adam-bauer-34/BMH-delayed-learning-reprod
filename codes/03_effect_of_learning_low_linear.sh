@@ -17,6 +17,6 @@ python simulation_mains/invRec_RiskPrem_cvxpy_main.py ar6_2 N1_T30_B8 8 3 1
 python simulation_mains/macRec_RiskPrem_cvxpy_main.py ar6_17 N1_T30_B8 8 3 1
 python simulation_mains/macRec_RiskPrem_cvxpy_main.py ar6_2 N1_T30_B8 8 3 1
 
-echo 'Making Figure 2...'
+echo 'Making Figure 3...'
 
 python figure_mains/effect_of_learning.py low-linear

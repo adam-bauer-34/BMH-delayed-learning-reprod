@@ -31,15 +31,10 @@ save_output = int(sys.argv[5])
 dt = 5.0
 learning_times = np.arange(0.0, 80.0, dt)
 
-if cal=='ar6pow_17':
+if cal=='ar6pow_15' or 'ar6pow_17' or 'ar6pow_2':
     scale = np.ones_like(learning_times) * 1e5
     scale[2] = 5e3
     scale[learning_times>=40.0] = 1e5
-
-if cal == 'ar6pow_2':
-    scale = np.ones_like(learning_times) * 1e5
-    scale[2] = 5e3
-    scale[learning_times >= 40.0] = 1e5
 
 data_tree_dict = {}
 i = 0
@@ -57,7 +52,7 @@ for Tstar in learning_times:
         tmp_m = INVRecourseModelExp(cal, N_samples, method)
     
     else:
-        if cal=='ar6pow_15':
+        if cal=='ar6pow_15' or 'ar6pow_17' or 'ar6pow_2':
             tmp_m = INVRecourseModel(cal, rec_cal, scale=scale[i])
         else:
             tmp_m = INVRecourseModel(cal, rec_cal)
