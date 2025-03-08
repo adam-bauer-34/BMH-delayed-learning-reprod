@@ -128,10 +128,11 @@ class INVRecourseModelExpWithBS():
         generate capital depreciations for abatement investment for t < T
     """
 
-    def __init__(self, cal, N_samples, method):
+    def __init__(self, cal, N_samples, method, scale=10000.):
         self.cal = cal # calibration name
         self.N_samples = N_samples # number of samples
         self.method = method # method for evaluating the expectation operator
+        self.scale = scale  # scale factor for obj 
 
         # if the calibration name is not a string, throw an error
         if not isinstance(self.cal, str) and not ininstance(self.rec_cal, str):
@@ -204,7 +205,7 @@ class INVRecourseModelExpWithBS():
         # NOTE: the KeyError comes from the fact that df_secs.loc['cbar'] has no entries
         try:
             self.cbars = cp.Parameter(self.N_secs, nonneg=True, 
-                                      value=df_secs.loc['cbar'].values)
+                                      value=df_secs.loc['cbar'].values/self.scale)
 
         except KeyError:
             # make relative costs for calibration
@@ -335,7 +336,7 @@ class INVRecourseModelExpWithBS():
                 self.constraints.extend([self.a[per][state][i, :] <= self.abars[i] for i in range(self.N_secs)])
 
                 ## irreversibility of capital stocks 
-                self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
+                # self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
                 
                 ## cap the cumulative emissions in each period
                 self.constraints.append(self.psi[per][state][-1] <= self.B_dist[state])
@@ -559,7 +560,7 @@ class INVRecourseModelExpWithBS():
         else:
             print("\n---------------\nGLOBAL OUTCOME\n---------------\n")
             print("Status: ", self.prob.status)
-            print("Total cost: ", self.prob.value)
+            print("Total cost: ", self.prob.value * self.scale)
             print("\n---------------\nRESULTS FOR DECISION AND STATE VARIABLES\n---------------\n")
             for sec in range(self.N_secs):
                 print("\n---------------\nSECTOR: {}.\n---------------\n".format(self.sectors[sec]))
@@ -573,7 +574,7 @@ class INVRecourseModelExpWithBS():
                     print("Period {} cumulative emissions path(s): ".format(per), self.psi_proc[per][state])
 
                     # the SCC is the final condition value
-                    print("Period {} carbon price: ".format(per), self.scc_proc[per][state], '\n')
+                    print("Period {} carbon price: ".format(per), self.scc_proc[per][state] * self.scale, '\n')
                 
     def _process_opt_output(self, print_outcome=False):
         """Process model output.
@@ -614,7 +615,7 @@ class INVRecourseModelExpWithBS():
                         'abatement': (['state', 'sector', 'time_state'], self.a_proc[per]),
                         'cumulative_emissions': (['state', 'time_state'], self.psi_proc[per]),
                         'scc': (['state', 'time'], self.scc_proc[per]),
-                        'cbars': (['sector'], self.cbars.value),
+                        'cbars': (['sector'], self.cbars.value * self.scale),
                         'abars': (['sector'], self.abars.value),
                         'deltas': (['sector'], self.deltas.value),
                         'a_0s': (['sector'], self.a_0s.value),
@@ -629,7 +630,7 @@ class INVRecourseModelExpWithBS():
         # make DataTree object with parent coordinate named 'period'
         self.data_tree = DataTree.from_dict(datatree_dict, 'period')
 
-        self.data_tree['0'].attrs = {'total_cost': self.prob.value,
+        self.data_tree['0'].attrs = {'total_cost': self.prob.value * self.scale,
                          'r': self.r.value,
                          'beta':self.beta.value,
                          'dt': self.dt.value,

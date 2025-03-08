@@ -220,8 +220,8 @@ ax['b'].set_xlabel("Year information is revealed")
 ax['c'].set_xlabel("Year information is revealed")
 
 if run_type == 'low-linear':
-    ax['a'].set_yticks([0, 10, 20, 30, 40])
-    ax['a'].set_ylim((5, 41))
+    ax['a'].set_yticks([20, 30, 40, 50])
+    ax['a'].set_ylim((15, 51))
     ax['b'].set_yticks([0, 5, 10, 15, 20, 25])
     ax['c'].set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
 

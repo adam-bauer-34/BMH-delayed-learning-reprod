@@ -336,7 +336,7 @@ class INVBaseModelEmis():
 
         ## on abatement
         self.constraints.append(self.a[:, 0] == self.a_0s) # initial a is the IC
-        self.constraints.extend([self.x[i, :] - self.deltas[i] * self.a[i, :-1] >= 0 for i in range(self.N_secs)]) # irreversibility constraints
+        # self.constraints.extend([self.x[i, :] - self.deltas[i] * self.a[i, :-1] >= 0 for i in range(self.N_secs)]) # irreversibility constraints
         self.constraints.extend([self.a[i, 1:] == self.a_vecs[i] for i in range(self.N_secs)]) # rest of values equal to fluxes
         self.constraints.extend([self.a[i] <= self.abars[i] for i in range(self.N_secs)]) # cap abatement at emissions rate
         #self.constraints.extend([self.a[i, -1] == max(self.abars[i].value) for i in range(self.N_secs)]) # must reach net zero by end? 

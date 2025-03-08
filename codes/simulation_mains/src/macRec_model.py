@@ -135,7 +135,11 @@ class MACRecourseModel():
 
         # set scale factor for objective function
         if cal == 'ar6pow_17':
-            self.scale = 30000. 
+            self.scale = 53000.
+        
+        elif cal == 'ar6pow_2':
+            self.scale = 45000. 
+
         else:
             self.scale = max(self.gbars.value)
 

@@ -362,7 +362,7 @@ class INVRecourseModelEmis():
                 self.constraints.extend([self.a[per][state][i] <= self.abars[per][i] for i in range(self.N_secs)])
 
                 ## irreversibility of capital stocks 
-                self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
+                # self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
                 
                 ## cap the cumulative emissions in each period
                 self.constraints.append(self.psi[per][state] <= self.tree.full_data[per][state])

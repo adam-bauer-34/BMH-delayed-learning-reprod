@@ -31,7 +31,13 @@ save_output = int(sys.argv[5])
 dt = 5.0
 learning_times = np.arange(0.0, 80.0, dt)
 
+if cal=='ar6pow_15' or 'ar6pow_17' or 'ar6pow_2':
+    scale = np.ones_like(learning_times) * 1e5
+    scale[2] = 5e3
+    scale[learning_times>=40.0] = 1e5
+
 data_tree_dict = {}
+i=0
 for Tstar in learning_times:
 
     print("------------------------------")
@@ -43,7 +49,7 @@ for Tstar in learning_times:
     #temporary model class
     # if Tstar = 0, run the expectation model, and if Tstar > 0, run the recourse model
     if Tstar == 0:
-        tmp_m = MACRecourseModelExp(cal, N_samples, method)
+        tmp_m = MACRecourseModelExp(cal, N_samples, method, scale=scale[i])
 
     else:
         tmp_m = MACRecourseModel(cal, rec_cal)
@@ -62,6 +68,8 @@ for Tstar in learning_times:
 
     # add data tree to dict
     data_tree_dict[str(Tstar)] = tmp_m.data_tree
+
+    i += 1
 
 cwd = os.getcwd()
 path_to_data = '/data/output/'

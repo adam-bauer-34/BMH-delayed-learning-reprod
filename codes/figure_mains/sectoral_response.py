@@ -21,8 +21,8 @@ from datatree import DataTree, open_datatree
 def get_rec_t_dep_obj(dt_rec, pers):
     N_secs = len(dt_rec['0.0']['0'].ds.sector)
     disc = (1 + 0.02)**(-1)
-    objs = np.zeros((len(pers), 7, 80))
-    a_s = np.zeros((len(pers), 7, 81))
+    objs = np.zeros((len(pers), 7, 300))
+    a_s = np.zeros((len(pers), 7, 301))
     for i in range(len(pers)):
         tmp_dt = dt_rec[str(pers[i])]
         if i == 0:
@@ -73,13 +73,13 @@ t17_inv_rec = open_datatree(data_head_path + 'ar6_17_N1_T30_B8_method3_inv_rp_da
 
 pers = np.arange(0.0, 35.0, 5.0)
 
-time = np.arange(0, 80, 1) + ti
+time = np.arange(0, 300, 1) + ti
 
 cstars, astars = get_rec_t_dep_obj(t17_inv_rec, pers)
 
 import matplotlib.transforms as mtransforms
 
-fig, ax = plt.subplots(2,4, figsize=(24, 12))
+fig, ax = plt.subplots(2, 4, figsize=(24, 12), sharex=False)
 
 jet = cm = plt.get_cmap('magma') 
 cNorm  = colors.Normalize(vmin=ti, vmax=max(pers)+ti)
@@ -90,10 +90,17 @@ sec_x = [0,0,0,0,1,1,1]
 sec_y = [0,1,2,3,0,1,2]
 
 for j in range(7):
+    if j == 1 or j == 3 or j == 4:
+        ax[sec_x[j], sec_y[j]].set_xlim((2020, 2200))
+    else:
+        ax[sec_x[j], sec_y[j]].set_xlim((2020, 2080))
+
+    ax[sec_x[j], sec_y[j]].plot(time,
+                                t17_inv_base.cbars.values[j] * 0.5 * t17_inv_base.investment.values[j]**2,
+                                color='grey', linestyle='dashed', linewidth=1.5)
     for i in range(len(pers)):
         colorVal = scalarMap.to_rgba(pers[i]+ti)
-        ax[sec_x[j], sec_y[j]].plot(time, cstars[i,j], color=colorVal, linestyle='solid')
-        # ax[sec_x[j], sec_y[j]].set_xlim((2020,2150))
+        ax[sec_x[j], sec_y[j]].plot(time, cstars[i, j], color=colorVal, linestyle='solid')
         ax[sec_x[j], sec_y[j]].set_title(sec[j])
         
         if sec_y[j] == 0:
@@ -110,6 +117,11 @@ for j in range(7):
 
 ax[1,3].axis('off')
 
+ax[1,3].plot([0,0], [1,1], linestyle='solid', color='grey', label='Stochastic model,\naverage path')
+ax[1,3].plot([0,0], [1,1], linestyle='dashed', color='grey', label='Deterministic model path')
+
+ax[1,3].legend(loc='center')
+
 labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 for j in range(7):
     # label physical distance in and down:
@@ -123,11 +135,6 @@ cbar.set_label("Year information is revealed", rotation=270, labelpad=45)
 #sns.despine(trim = True)
 
 #fig.subplots_adjust(wspace=0.2, hspace=0.2)
-
-no_xs = [0,0,0]
-no_ys = [0,1,2]
-for i in range(len(no_xs)):
-    ax[no_xs[i], no_ys[i]].tick_params(axis='x', labelcolor='white')
 
 # ax[0, 1].set_ylim((0, 375))
 

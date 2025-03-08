@@ -89,6 +89,8 @@ data_head_path = ''.join([cwd, '/data/output/'])
 # initial year for plotting
 ti = 2020
 tf = 2100 # generally...?
+dt = 5
+pers = np.arange(ti, tf, dt)
 
 # import data
 t17_inv_base = xr.open_dataset(data_head_path + 'ar6_17_inv_output.nc')
@@ -98,6 +100,8 @@ t17_inv_recbs = open_datatree(data_head_path + 'ar6bs_17_N1_T30_B8_method3_invBS
 t2_inv_base = xr.open_dataset(data_head_path + 'ar6_2_inv_output.nc')
 t2_inv_rec = open_datatree(data_head_path + 'ar6_2_N1_T30_B8_method3_inv_rp_data.nc')
 t2_inv_recbs = open_datatree(data_head_path + 'ar6bs_2_N1_T30_B8_method3_invBS_rp_data.nc')
+
+print(t2_inv_recbs['5.0']['0'].ds.total_cost, t2_inv_rec['5.0']['0'].ds.total_cost)
 
 # total costs
 tot_t17_inv = get_tot_cost(t17_inv_rec)
@@ -119,26 +123,26 @@ import matplotlib.transforms as mtransforms
 
 fig, ax = plt.subplot_mosaic([['a', 'b']], sharex=True,
                              gridspec_kw={'height_ratios': [1], 'width_ratios': [1, 1]},
-                            figsize=(20,8))
+                            figsize=(20, 8))
 
 # total cost of uncertainty
-t17, = ax['a'].plot(t17_inv_base.time.values[::5] + ti, tot_t17_inv/1000, linestyle='solid', color='#56B4E9', label='$T^* = 1.7 \ ^\circ$C')
-t2, = ax['a'].plot(t17_inv_base.time.values[::5] + ti, tot_t2_inv/1000, linestyle='solid', color='#009E73', label='$T^* = 2 \ ^\circ$C')
+t17, = ax['a'].plot(pers, tot_t17_inv/1000, linestyle='solid', color='#56B4E9', label='$T^* = 1.7 \ ^\circ$C')
+t2, = ax['a'].plot(pers, tot_t2_inv/1000, linestyle='solid', color='#009E73', label='$T^* = 2 \ ^\circ$C')
 
-ax['a'].plot(t17_inv_base.time.values[::5] + ti, tot_t17_invbs/1000, linestyle='dashed', color='#56B4E9')
-ax['a'].plot(t17_inv_base.time.values[::5] + ti, tot_t2_invbs/1000, linestyle='dashed', color='#009E73')
+ax['a'].plot(pers, tot_t17_invbs/1000, linestyle='dashed', color='#56B4E9')
+ax['a'].plot(pers, tot_t2_invbs/1000, linestyle='dashed', color='#009E73')
 
 ax['a'].set_ylabel("Total cost of policy (Trillions of $)")
 ax['a'].set_xlabel("Year information is revealed")
 
-ax['a'].set_yticks([5,10,15,20,25,30,35,40])
+# ax['a'].set_yticks([5,10,15,20,25,30,35,40])
 
 # additional cost of uncertainty
-ax['b'].plot(t17_inv_base.time.values[::5] + ti, VoL_t17_inv/1000, linestyle='solid', color='#56B4E9', label='$T^* = 1.7 \ ^\circ$C')
-ax['b'].plot(t17_inv_base.time.values[::5] + ti, VoL_t2_inv/1000, linestyle='solid', color='#009E73', label='$T^* = 2 \ ^\circ$C')
+ax['b'].plot(pers, VoL_t17_inv/1000, linestyle='solid', color='#56B4E9', label='$T^* = 1.7 \ ^\circ$C')
+ax['b'].plot(pers, VoL_t2_inv/1000, linestyle='solid', color='#009E73', label='$T^* = 2 \ ^\circ$C')
 
-ax['b'].plot(t17_inv_base.time.values[::5] + ti, VoL_t17_invbs/1000, linestyle='dashed', color='#56B4E9')
-ax['b'].plot(t17_inv_base.time.values[::5] + ti, VoL_t2_invbs/1000, linestyle='dashed', color='#009E73')
+ax['b'].plot(pers, VoL_t17_invbs/1000, linestyle='dashed', color='#56B4E9')
+ax['b'].plot(pers, VoL_t2_invbs/1000, linestyle='dashed', color='#009E73')
 
 ax['b'].set_ylabel("Additional cost of uncertainty\n(Trillions of \$)")
 ax['b'].set_xlabel("Year information is revealed")

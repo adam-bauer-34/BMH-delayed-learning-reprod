@@ -124,8 +124,7 @@ tf = 2100 # generally...?
 
 pers = np.arange(0.0, 35.0, 5.0) # learning times
 
-time = np.arange(0, 80.0, 1)
-cutoff = 2030
+time = np.arange(0, 300.0, 1)
 
 # import data
 if run_type == 't15':
@@ -188,15 +187,15 @@ else:
 
     fig, ax = plt.subplots(1, 2, figsize=(14, 6))
 
+    ax[0].plot(time + ti, np.sum(cstars_base_17, axis=0)/1000, color='grey', linestyle='dashed', label="Deterministic")
+    ax[1].plot(time + ti, np.sum(cstars_base_2, axis=0)/1000, color='grey', linestyle='dashed', label='Deterministic')
+    
     for i in range(7):
         colorVal = scalarMap.to_rgba(pers[i]+ti)
         ax[0].plot(time + ti, np.sum(cstars_17, axis=1)[i]/1000, linestyle='solid', color=colorVal)
         ax[1].plot(time + ti, np.sum(cstars_2, axis=1)[i]/1000, linestyle='solid', color=colorVal)
 
     ax[1].plot([-100, -100], [0.1, 0.1], linestyle='solid', color='grey', label='Stochastic')
-
-    ax[0].plot(time + ti, np.sum(cstars_base_17, axis=0)/1000, color='grey', linestyle='dashed', label="Deterministic")
-    ax[1].plot(time + ti, np.sum(cstars_base_2, axis=0)/1000, color='grey', linestyle='dashed', label='Deterministic')
 
     ax[1].legend(loc='center right')
 
@@ -207,7 +206,8 @@ else:
     ax[0].set_title(r"$T^* = 1.7 \ ^\circ$C")
     ax[1].set_title(r"$T^* = 2 \ ^\circ$C")
 
-    ax[1].set_xlim((2015, 2105))
+    ax[0].set_xlim((2015, 2155))
+    ax[1].set_xlim((2015, 2155))
 
     labels = ['a', 'b']
     for label in [0, 1]:
@@ -221,9 +221,9 @@ else:
     cbar.set_label("Year information is revealed", rotation=270, labelpad=25)
 
 if run_type == 't15':
-    fig.savefig(basefile + cal_prefix + '-temp-redist-t15.png'.format(int(cutoff)), dpi=400, bbox_inches='tight')
+    fig.savefig(basefile + cal_prefix + '-temp-redist-t15.png'.format(int(1)), dpi=400, bbox_inches='tight')
 
 else:
-    fig.savefig(basefile + cal_prefix + '-temp-redist.png'.format(int(cutoff)), dpi=400, bbox_inches='tight')
+    fig.savefig(basefile + cal_prefix + '-temp-redist.png'.format(int(1)), dpi=400, bbox_inches='tight')
 
 plt.show()

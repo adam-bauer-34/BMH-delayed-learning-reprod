@@ -128,7 +128,7 @@ class INVRecourseModelWithBS():
         generate capital depreciations for abatement investment for t < T
     """
 
-    def __init__(self, cal, rec_cal, scale=1.):
+    def __init__(self, cal, rec_cal, scale=10000.):
         self.cal = cal # calibration name
         self.rec_cal = rec_cal
         self.scale = float(scale)
@@ -268,7 +268,7 @@ class INVRecourseModelWithBS():
         self.cbars = cp.Parameter(self.N_secs, nonneg=True, value=cbars_val)
 
         # save calibration to a csv
-        df = pd.DataFrame([self.gbars, self.abars.value, self.deltas.value, self.a_0s.value, self.scale*self.cbars.value],
+        df = pd.DataFrame([self.gbars, self.abars.value, self.deltas.value, self.a_0s.value, self.cbars.value],
                               index=['gbar', 'abar', 'delta', 'a_0', 'cbar'], 
                               columns=self.sectors)
 
@@ -366,7 +366,7 @@ class INVRecourseModelWithBS():
                 self.constraints.extend([self.a[per][state][i, :] <= self.abars[i] for i in range(self.N_secs)])
 
                 ## irreversibility of capital stocks 
-                self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
+                # self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
                 
                 if per == self.N_periods - 1:
                     ## cap the cumulative emissions in each period
@@ -599,7 +599,7 @@ class INVRecourseModelWithBS():
         else:
             print("\n---------------\nGLOBAL OUTCOME\n---------------\n")
             print("Status: ", self.prob.status)
-            print("Total cost: ", self.prob.value)
+            print("Total cost: ", self.prob.value * self.scale)
             print("\n---------------\nRESULTS FOR DECISION AND STATE VARIABLES\n---------------\n")
             for sec in range(self.N_secs):
                 print("\n---------------\nSECTOR: {}.\n---------------\n".format(self.sectors[sec]))
@@ -613,7 +613,7 @@ class INVRecourseModelWithBS():
                     print("Period {} cumulative emissions path(s): ".format(per), self.psi_proc[per][state])
 
                     # the SCC is the final condition value
-                    print("Period {} carbon price: ".format(per), self.scc_proc[per][state], '\n')
+                    print("Period {} carbon price: ".format(per), self.scc_proc[per][state] * self.scale, '\n')
                 
     def _process_opt_output(self, print_outcome=False):
         """Process model output.

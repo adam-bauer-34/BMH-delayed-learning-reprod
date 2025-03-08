@@ -22,7 +22,7 @@ tf = 2100 # generally...?
 
 # import data
 t17_inv_base = open_datatree(data_head_path + 'ar6_17_inv_output.nc')
-t17_inv_rec = open_datatree(data_head_path + 'ar6_17_N1_T40_B500_method2_inv_rp_data_short.nc')
+t17_inv_rec = open_datatree(data_head_path + 'ar6_17_short_N1_T40_B500_method2_inv_rp_data_short.nc')
 
 # distributions 
 scc_dist_2020 = t17_inv_rec['0.0']['0'].ds.scc.values[:,0]/(1/500)
@@ -31,7 +31,7 @@ B_dist = t17_inv_rec['0.0']['0'].ds.B_dist.values
 
 scc_dist_2030 = t17_inv_rec['10.0']['1'].ds.scc.values[:,0]/(1/500)
 
-scc_base = t17_inv_base.scc.values[0] * -1000
+scc_base = -t17_inv_base.scc.values[0]
 
 import matplotlib.transforms as mtransforms
 

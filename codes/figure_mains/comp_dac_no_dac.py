@@ -56,43 +56,45 @@ x_inds = [0,0,0,0,1,1,1,1]
 y_inds = [0,1,2,3,0,1,2,3]
 
 track = 1
-rec_time = np.arange(0,80,1)
+time = np.arange(2020, 2320, 1)
 
-cert, = ax[0,0].plot(t17_inv_base.time + ti, 
+cert, = ax[0,0].plot(np.arange(2020, 2320, 1), 
                     (0.5 * t17_inv_base.cbars.values[0] * t17_inv_base.investment.values[0]**2))
-nodac_avg, = ax[0,0].plot(rec_time + ti, t17_inv_costs_mean_sec[0],
+nodac_avg, = ax[0,0].plot(time, t17_inv_costs_mean_sec[0],
                                       linestyle='solid', color='#E69F00')
-dac_avg, = ax[0,0].plot(rec_time + ti, t17_invbs_costs_mean_sec[0],
+dac_avg, = ax[0,0].plot(time, t17_invbs_costs_mean_sec[0],
                                       linestyle='solid', color='#56B4E9')
 
 for i in range(1, len(x_inds)):
     if track != 7:
-        ax[x_inds[i], y_inds[i]].plot(t17_inv_base.time + ti, (0.5 * t17_inv_base.cbars.values[i] * t17_inv_base.investment.values[i]**2), label="Certainty policy")
-        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_inv_costs_med_sec[i], label="Recourse: Median",
+        ax[x_inds[i], y_inds[i]].plot(time, (0.5 * t17_inv_base.cbars.values[i] * t17_inv_base.investment.values[i]**2), label="Certainty policy")
+        #ax[x_inds[i], y_inds[i]].plot(time, t17_inv_costs_med_sec[i], label="Recourse: Median",
         #                              linestyle='dashed', color='#E69F00')
-        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_inv_costs_mean_sec[i], label="Average investment without DAC",
+        ax[x_inds[i], y_inds[i]].plot(time, t17_inv_costs_mean_sec[i], label="Average investment without DAC",
                                       linestyle='solid', color='#E69F00')
-        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t17_inv_costs_5p_sec[i], t17_inv_costs_95p_sec[i], 
+        #ax[x_inds[i], y_inds[i]].fill_between(time, t17_inv_costs_5p_sec[i], t17_inv_costs_95p_sec[i], 
         #                                      label=r"Recourse: 5$^{\rm{th}}-$95$^{\rm{th}}$ quantile range",
         #                                      alpha=0.4, color='#E69F00')
     
-        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_invbs_costs_med_sec[i], label="RecourseBS: Median",
+        #ax[x_inds[i], y_inds[i]].plot(time, t17_invbs_costs_med_sec[i], label="RecourseBS: Median",
         #                              linestyle='dashed', color='#56B4E9')
-        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_invbs_costs_mean_sec[i],
+        ax[x_inds[i], y_inds[i]].plot(time, t17_invbs_costs_mean_sec[i],
                                       linestyle='solid', color='#56B4E9', label="Average investment with DAC")
-        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t17_invbs_costs_5p_sec[i], t17_invbs_costs_95p_sec[i], 
+        #ax[x_inds[i], y_inds[i]].fill_between(time, t17_invbs_costs_5p_sec[i], t17_invbs_costs_95p_sec[i], 
         #                                      alpha=0.4, color='#56B4E9')
         
     else:
-        #ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_invbs_costs_med_sec[i], label="Recourse: Median",
+        #ax[x_inds[i], y_inds[i]].plot(time, t17_invbs_costs_med_sec[i], label="Recourse: Median",
         #                              linestyle='dashed', color='#56B4E9')
-        ax[x_inds[i], y_inds[i]].plot(rec_time + ti, t17_invbs_costs_mean_sec[i], label="Recourse: Mean",
+        ax[x_inds[i], y_inds[i]].plot(time, t17_invbs_costs_mean_sec[i], label="Recourse: Mean",
                                       linestyle='solid', color='#56B4E9')
-        #ax[x_inds[i], y_inds[i]].fill_between(rec_time + ti, t17_invbs_costs_5p_sec[i], t17_invbs_costs_95p_sec[i], 
+        #ax[x_inds[i], y_inds[i]].fill_between(time, t17_invbs_costs_5p_sec[i], t17_invbs_costs_95p_sec[i], 
         #                                      label=r"Recourse: 5$^{\rm{th}}-$95$^{\rm{th}}$ quantile range",
         #                                      alpha=0.4, color='#56B4E9')
         
     N_periods = 2
+    ax[x_inds[i], y_inds[i]].set_xlim((2020, 2200))
+    
     for per in range(N_periods-1):
         tmp_dec_time = t17_inv_rec[str(per)].ds.time.values[-1] + ti
         ax[x_inds[i], y_inds[i]].vlines(tmp_dec_time, 0.0, max(t17_invbs_costs_mean_sec[i]) * 1.02, 

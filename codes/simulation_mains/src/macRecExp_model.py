@@ -107,7 +107,7 @@ class MACRecourseModelExp():
         generate the vector of cumulative emissions for t>0
     """
 
-    def __init__(self, cal, N_samples, method, scale=5000):
+    def __init__(self, cal, N_samples, method, scale=5000.):
         self.cal = cal # calibration name
         self.N_samples = N_samples # recourse calibration name
         self.method = method # method to evaluate the expectation operator

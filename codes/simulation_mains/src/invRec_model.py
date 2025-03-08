@@ -132,17 +132,6 @@ class INVRecourseModel():
     def __init__(self, cal, rec_cal, scale=None):
         self.cal = cal # calibration name
         self.rec_cal = rec_cal # recourse calibration name
-        
-        if scale != None:
-            self.scale = scale  # model scaling for those that need it 
-
-        # set scale factor for objective function in simplified simulations 
-        elif self.cal == 'simp':
-            self.scale = self.cbars[0].value / 5.
-
-        # set scaling that generally works
-        else:
-            self.scale = 27000. 
 
         # if the calibration name is not a string, throw an error
         if not isinstance(self.cal, str) and not isinstance(self.rec_cal, str):
@@ -165,6 +154,18 @@ class INVRecourseModel():
         print("Recourse calibration name: {}.".format(self.rec_cal))
         print("Information revelation times (after the t=0): {} yrs.".format(self.rev_times))
         print("This is a {}-period optimization problem embedded in a base-{} path dependent tree structure.\n".format(self.N_periods, self.base))
+
+        # set scale factors for objective function 
+        if scale != None:
+            self.scale = scale  # model scaling for those that need it 
+
+        # set scale factor for objective function in simplified simulations 
+        elif self.cal == 'simp':
+            self.scale = self.cbars[0].value / 5.
+
+        # set scaling that generally works
+        else:
+            self.scale = 27000. 
 
     def _import_calibration(self):
         """Import calibration.
@@ -367,7 +368,7 @@ class INVRecourseModel():
                 self.constraints.extend([self.a[per][state][i, :] <= 1.0 for i in range(self.N_secs)])
 
                 ## irreversibility of capital stocks 
-                self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
+                # self.constraints.extend([self.x[per][state][i, :] - self.deltas[i] * self.a[per][state][i, :-1] >= 0 for i in range(self.N_secs)])
                 
                 ## cap the cumulative emissions in each period
                 self.constraints.append(self.psi[per][state] <= (self.tree.full_data[per][state] / self.B.value))
