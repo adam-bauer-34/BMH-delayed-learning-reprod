@@ -113,6 +113,21 @@ for state in data['1'].ds.state:
     ax['d'].plot(time, mabate_paths[state], linestyle='solid', label=labels[state.values], color=colors[state.values])
     ax['f'].plot(time, mcum_paths[state], linestyle='solid', label=labels[state.values], color=colors[state.values])
 
+# plot pre-learning sections
+ax['a'].plot(time[time<2050], 0.5 * base.cbars.values[0] * inv_paths[0, time<2050]**2  / 1000,
+    linestyle='solid', color='k')
+ax['c'].plot(time[time<=2050], abate_paths[state, time<=2050], linestyle='solid',
+    label='Stochastic model,\nPre-learning path', color='k')
+ax['e'].plot(time[time<=2050], cum_paths[state, time<=2050], linestyle='solid',
+    label='Stochastic model,\nPre-learning path', color='k')
+
+ax['b'].plot(time[time<2050], minv_paths[state, time<2050] / 1000, linestyle='solid', color='k',
+    label='Stochastic model,\nPre-learning path')
+ax['d'].plot(time[time<2050], mabate_paths[state, time<2050], linestyle='solid', 
+    label='Stochastic model,\nPre-learning path', color='k')
+ax['f'].plot(time[time<=2050], mcum_paths[state, time<=2050], linestyle='solid', 
+    label='Stochastic model,\nPre-learning path', color='k')
+
 # plot bases
 ax['a'].plot(time, 0.5 * base.cbars.values[0] * base.investment.values[0]**2 / 1000, linestyle='dashed', color='grey',
             linewidth=1.5, label='Deterministic model,\nAverage carbon budget path')
@@ -132,7 +147,7 @@ ax['c'].set_ylim((0, 10.1))
 ax['d'].set_ylim((0, 10.1))
 ax['e'].set_ylim((0, 405))
 ax['f'].set_ylim((0, 405))
-ax['b'].legend(fontsize=12, loc='upper center')
+ax['b'].legend(fontsize=11, loc='upper center')
 
 # x labales
 ax['e'].set_xlabel("Year")

@@ -18,7 +18,7 @@ data_head_path = ''.join([cwd, '/data/output/'])
 
 # initial year for plotting
 ti = 2020
-tf = 2100 # generally...?
+tf = 2100
 
 # import data
 t17_inv_base = open_datatree(data_head_path + 'ar6_17_inv_output.nc')
@@ -75,7 +75,7 @@ ax[0].set_xticks([300,600,900,1200])
 ax0_top = ax[0].twiny()
 ax0_top.set_xlim(ax[0].get_xlim())
 ax0_top.set_xticks([300,600,900,1200])
-ax0_top.set_xlabel("Remaining carbon budget\nat initialization (GtCO$_2$)", labelpad=20)
+ax0_top.set_xlabel("Remaining carbon budget at initialization (GtCO$_2$)", labelpad=10)
 ax[0].set_ylabel(r"Carbon price (\$/tCO$_2$)")
 
 # 2030
@@ -99,9 +99,12 @@ ax[1].set_xticks([0,300,600,900])
 ax1_top = ax[1].twiny()
 ax1_top.set_xlim(ax[0].get_xlim())
 ax1_top.set_xticks([300,600,900,1200])
-ax1_top.set_xlabel("Remaining carbon budget\nat initialization (GtCO$_2$)", labelpad=20)
+ax1_top.set_xlabel("Remaining carbon budget at initialization (GtCO$_2$)", labelpad=10)
 ax[1].set_xlim((0,
                 max(B_dist-t17_inv_rec['10.0']['1'].ds.cumulative_emissions[1,0].values) * uf_0))
+
+#ax[0].set_title("Information revealed in 2020", loc='center')
+#ax[1].set_title("Information revealed in 2030", loc='center')
 
 right = ['a', 'b']
 tracker = 0
