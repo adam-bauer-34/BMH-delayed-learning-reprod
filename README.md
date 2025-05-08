@@ -2,7 +2,9 @@
 
 By: Adam Michael Bauer -- adammb4 [at] illinois [dot] edu
 
-To cite our working paper that uses these codes: [Bauer, A. M., F. McIsaac, S. Hallegatte. *How Delayed Learning about Climate Uncertainty Impacts Decarbonization Investment Strategies*. World Bank Policy Research Working Paper No. WPS10743, World Bank Group, Washington DC, 2024.](https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099829103282438373/idu1f2d86d77127091490d1a6df1dc342f15d10b)
+Citation of journal article: Bauer, A. M., F. McIsaac, S. Hallegatte. Decarbonization Investment Strategies in an Uncertain Climate. Forthcoming in *Earth's Future*, 2025. [Link to accepted version.](https://www.ambauer.com/files/papers/decarb-uncertain-climate/BMH-EarthsFuture-Accepted.pdf) (Link to journal page will be added once paper is in print.)
+
+The working paper version of our paper is: [Bauer, A. M., F. McIsaac, S. Hallegatte. *How Delayed Learning about Climate Uncertainty Impacts Decarbonization Investment Strategies*. World Bank Policy Research Working Paper No. WPS10743, World Bank Group, Washington DC, 2024.](https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099829103282438373/idu1f2d86d77127091490d1a6df1dc342f15d10b)
 
 ## General package overview
 
@@ -28,7 +30,7 @@ Each code is assigned a number corresponding to the figure it creates. Note an `
 | Figure SI 8: Effect of delayed learning on the temporal distribution of spending, nonlinear calibration | `si08_temporal_redistribution_pow.sh` | This figure was verified virtually. See *Known issues* below. |
 | Figure SI 9: Effect of delayed learning on aggregate policy cost, T*= 1.5 deg C | `si09_effect_of_learning_t15.sh` | - |
 | Figure SI 10: Effect of delayed learning on the temporal distribution of spending, T*=1.5 deg C | `si10_temporal_redistribution_t15.sh`| - |
-| Figure SI 11: Carbon prices as a function of learning date | `si11_carbon_price_sensitivity.sh`| - |
+| Figure SI 11: Carbon prices as a function of learning date | `si11_carbon_price_sensitivity.sh`| Quantitative results may vary. See *Known issues* below. |
 
 If you're an academic, you can email Gurobi customer support to get a free academic license. It's easy to install, and once it's installed, I believe you'll be good to go to run the codes.
 
@@ -57,9 +59,11 @@ python simulation_mains/invBase_cvxpy_main.py ar6_15 1 0
 
 ## Known issues
 
-The only figures that were not able to be reproduced on a member of the World Bank Group's Reproducibility team's computer were scripts `si07` and `si08`. These figures were verified virtually, with a team member joining via video call and watching the code run on the author's laptop.
+The only figures that were not able to be reproduced on a member of the World Bank Group's Reproducibility team's computer were scripts `si07` and `si11`. `si07`  was verified virtually, with a team member joining via video call and watching the code run on the author's laptop. `si11` remains slightly different between the reproducer's run and the lead authors.
 
-The hypothesized reason is that both `si07` and `si08` have highly convex objective functions, which requires more powerful hardware to solve precisely than what was available to the reproducibility team member. The team member got an `optimal_inaccurate` solution during optimization. The code will throw an error when anything other than an `optimal` solution is found. It was verified that the original author of the code gets an `optimal` solution when the `si07` and `si08` codes are run.
+The hypothesized reason is that the simulations required for `si07` and `si11` have highly convex objective functions, which requires more powerful hardware to solve precisely than what was available to the reproducibility team member. The team member got an `optimal_inaccurate` solution during optimization step of `si07`. The code will throw an error when anything other than an `optimal` solution is found. It was verified that the original author of the code gets an `optimal` solution when the `si07` code is run.
+
+For `si11`, what is plotted is the optimal carbon price for each run, which is the Lagrange dual of emissions reductions in the model. This is found by solving the KCP dual optimization problem, which is even more sensitive to highly nonlinear objective functions than the minimization step itself (which is required for `si07` and throws errors for the World Bank team member). While the results for a given user may vary, the overall qualitative implications of the figure as discussed in the paper hold for both the World Bank team member and the original author.
 
 If a user gets an `optimal_inaccurate` solution for either of these codes, one possible course of action is to edit the `scale` parameter found in the `codes/simulation_mains/invRec_RiskPrem_cvxpy_main.py` file. This can be found on lines 34 through 42. This issue of scaling the objective function is common in optimization.
 
@@ -67,5 +71,5 @@ If a user gets an `optimal_inaccurate` solution for either of these codes, one p
 
 The hardware of the original author is a 2023 MacBook Pro with an M2 Pro Chip and 16 GB of RAM. 
 
-Last edited: 6 March, 2025.
+Last edited: 8 May, 2025.
 
