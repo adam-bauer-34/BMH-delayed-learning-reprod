@@ -27,7 +27,7 @@ Each code is assigned a number corresponding to the figure it creates. Note an `
 | Figure SI 5: Effect of delayed learning on aggregate policy cost, high-bound calibration | `si05_effect_of_learning_high_linear.sh` | - |
 | Figure SI 6: Effect of delayed learning on the temporal distribution of spending, high-bound calibration | `si06_temporal_redistribution_high_linear.sh` | - |
 | Figure SI 7: Effect of delayed learning on aggregate policy cost, nonlinear calibration | `si07_effect_of_learning_pow.sh` | This figure was verified virtually. See *Known issues* below. |
-| Figure SI 8: Effect of delayed learning on the temporal distribution of spending, nonlinear calibration | `si08_temporal_redistribution_pow.sh` | This figure was verified virtually. See *Known issues* below. |
+| Figure SI 8: Effect of delayed learning on the temporal distribution of spending, nonlinear calibration | `si08_temporal_redistribution_pow.sh` | - |
 | Figure SI 9: Effect of delayed learning on aggregate policy cost, T*= 1.5 deg C | `si09_effect_of_learning_t15.sh` | - |
 | Figure SI 10: Effect of delayed learning on the temporal distribution of spending, T*=1.5 deg C | `si10_temporal_redistribution_t15.sh`| - |
 | Figure SI 11: Carbon prices as a function of learning date | `si11_carbon_price_sensitivity.sh`| Quantitative results may vary. See *Known issues* below. |
